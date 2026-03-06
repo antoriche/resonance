@@ -1,0 +1,54 @@
+import React from "react";
+import AudioVizualizer from "./AudioVizualizer";
+
+const PlayIcon = () => (
+  <svg
+    height="100%"
+    width="100%"
+    viewBox="0 0 512 512"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M133 440a35.37 35.37 0 0 1-17.5-4.67c-12-6.8-19.46-20-19.46-34.33V111c0-14.37 7.46-27.53 19.46-34.33a35.13 35.13 0 0 1 35.77.45l247.85 148.36a36 36 0 0 1 0 61l-247.89 148.4A35.5 35.5 0 0 1 133 440Z"
+      fill="currentColor"
+    />
+  </svg>
+);
+
+const ControlBar = () => {
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 16,
+      }}
+    >
+      <button
+        style={{
+          background: "none",
+          border: "none",
+          padding: 0,
+          cursor: "pointer",
+          width: 32,
+          height: 32,
+          color: "var(--primary-color)",
+        }}
+      >
+        <PlayIcon />
+      </button>
+      <div
+        style={{
+          flex: 1,
+          flexShrink: 1,
+          overflow: "hidden",
+        }}
+      >
+        <AudioVizualizer />
+      </div>
+    </div>
+  );
+};
+
+export default ControlBar;
