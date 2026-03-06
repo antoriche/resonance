@@ -8,11 +8,9 @@ import {
   UPLOAD_DIR,
   type UploadResult,
 } from "@/lib/audio/constants";
-import {
-  streamToDisk,
-  MaxSizeExceededError,
-} from "@/lib/audio/stream-to-disk";
+import { streamToDisk, MaxSizeExceededError } from "@/lib/audio/stream-to-disk";
 import { authenticate } from "@/lib/middleware/auth";
+import { audioProcessor } from "@/lib/services/audio-processor";
 
 export const runtime = "nodejs";
 
@@ -29,6 +27,26 @@ function extensionFromFilename(name: string): string | null {
 
 function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
+}
+
+/**
+ * Trigger audio processing (fire-and-forget)
+ */
+async function triggerProcessing(
+  destPath: string,
+  id: string,
+  filename: string,
+) {
+  try {
+    console.log(`[audio/upload] Triggered async processing: ${id}`);
+
+    audioProcessor.processAudioFile(destPath, { id, filename }).catch((err) => {
+      console.error(`[audio/upload] Background processing failed: ${id}`, err);
+    });
+  } catch (error) {
+    // Don't fail the upload if processing initialization fails
+    console.error(`[audio/upload] Failed to trigger processing: ${id}`, error);
+  }
 }
 
 // ── Route handler ────────────────────────────────────────────────────
@@ -93,6 +111,9 @@ async function handleRawStream(request: Request, contentType: string) {
       createdAt: new Date().toISOString(),
     };
 
+    // Trigger audio processing
+    await triggerProcessing(destPath, id, filename);
+
     return NextResponse.json(result, { status: 201 });
   } catch (error) {
     return handleStreamError(error);
@@ -154,6 +175,9 @@ async function handleMultipart(request: Request) {
       path: `/uploads/${filename}`,
       createdAt: new Date().toISOString(),
     };
+
+    // Trigger audio processing
+    await triggerProcessing(destPath, id, filename);
 
     return NextResponse.json(result, { status: 201 });
   } catch (error) {
