@@ -16,8 +16,6 @@ export const files = pgTable("files", {
 });
 
 export const transcriptions = pgTable("transcriptions", {
-  // FK to file, offset, duration, text, diaryId
-  // create foreign key to files table
   id: text("id").primaryKey(),
   fileId: text("file_id")
     .notNull()
@@ -27,7 +25,7 @@ export const transcriptions = pgTable("transcriptions", {
   offset: integer("offset").notNull(),
   duration: integer("duration").notNull(),
   text: text("text").notNull(),
-  embeddings: vector("embeddings", { dimensions: 256 }).notNull(),
+  embedding: vector("embedding", { dimensions: 256 }).notNull(),
 });
 
 // ── Export types ─────────────────────────────────────────────────────

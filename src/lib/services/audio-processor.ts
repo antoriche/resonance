@@ -36,7 +36,7 @@ class AudioProcessor {
             offset: chunk.timestamp,
             duration: chunk.duration,
             text: chunk.text,
-            embeddings: chunk.embeddings,
+            embedding: chunk.embedding,
           });
         }),
       );
@@ -61,12 +61,31 @@ class AudioProcessor {
       Promise<{
         timestamp: number;
         duration: number;
-        embeddings: number[];
+        embedding: number[];
         text: string;
       }>
     >
   > {
+    const diarizationStart = performance.now();
+    console.log(`[audio-processor] Starting diarization for file: ${filePath}`);
+
     const segments = await diarizeSpeaker(filePath);
+
+    const diarizationEnd = performance.now();
+    const diarizationDuration = (diarizationEnd - diarizationStart) / 1000; // Convert to seconds
+
+    console.log(
+      `[audio-processor] Diarization completed in ${diarizationDuration.toFixed(2)}s, ${segments.length} segments found for file: ${filePath}`,
+      JSON.stringify(
+        segments.map((s) => ({
+          ...s,
+          embedding: `[${s.embedding
+            .slice(0, 5)
+            .map((v) => v.toFixed(2))
+            .join(", ")}...]`,
+        })),
+      ),
+    );
 
     return segments.map(async (segment) => {
       return speachToText(filePath, {
@@ -76,7 +95,7 @@ class AudioProcessor {
         timestamp: segment.offset,
         duration: segment.duration,
         text: res.text,
-        embeddings: new Array(256).fill(0), // Placeholder for embeddings
+        embedding: segment.embedding,
       }));
     });
   }

@@ -1,1 +1,1 @@
-export { diarizeSpeaker } from "./mock";
+export { diarizeSpeaker } from "./diarize";
