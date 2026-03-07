@@ -40,7 +40,7 @@ async function triggerProcessing(
   try {
     console.log(`[audio/upload] Triggered async processing: ${id}`);
 
-    audioProcessor.processAudioFile(destPath, { id, filename }).catch((err) => {
+    audioProcessor.syncFileData(destPath, { id, filename }).catch((err) => {
       console.error(`[audio/upload] Background processing failed: ${id}`, err);
     });
   } catch (error) {

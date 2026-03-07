@@ -1,6 +1,6 @@
 import chokidar, { type FSWatcher } from "chokidar";
 import path from "node:path";
-import { getTranscriptionByFilename } from "@/lib/db/operations";
+import { getFileByFilename } from "@/lib/db/operations";
 import { audioProcessor } from "./audio-processor";
 import { UPLOAD_DIR, ALLOWED_EXTENSIONS } from "@/lib/audio/constants";
 
@@ -70,7 +70,7 @@ class FileWatcher {
       console.log(`[file-watcher] New file detected: ${filename}`);
 
       // Check if file is already in database
-      const existing = await getTranscriptionByFilename(filename);
+      const existing = await getFileByFilename(filename);
 
       if (existing) {
         console.log(`[file-watcher] File already processed: ${filename}`);
@@ -83,10 +83,7 @@ class FileWatcher {
 
       // Trigger processing
       console.log(`[file-watcher] Triggering processing for: ${filename}`);
-      await audioProcessor.processAudioFile(filePath, {
-        id: audioFileId,
-        filename,
-      });
+      await audioProcessor.syncFileData(filePath);
 
       console.log(`[file-watcher] Processing initiated for: ${filename}`);
     } catch (error) {

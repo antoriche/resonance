@@ -1,23 +1,36 @@
-import { pgTable, text, integer, timestamp } from "drizzle-orm/pg-core";
+import { foreignKey } from "drizzle-orm/gel-core";
+import {
+  pgTable,
+  text,
+  integer,
+  timestamp,
+  vector,
+  PgTableWithColumns,
+} from "drizzle-orm/pg-core";
 
 // ── PostgreSQL schema ────────────────────────────────────────────────
 
-export const transcriptions = pgTable("transcriptions", {
+export const files = pgTable("files", {
   id: text("id").primaryKey(),
-  audioFileId: text("audio_file_id").notNull(),
-  filename: text("filename").notNull(),
   filePath: text("file_path").notNull(),
-  text: text("text"),
-  status: text("status", {
-    enum: ["pending", "processing", "completed", "failed"],
-  }).notNull(),
-  duration: integer("duration"),
-  error: text("error"),
-  createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
-  completedAt: timestamp("completed_at", { mode: "string" }),
+});
+
+export const transcriptions = pgTable("transcriptions", {
+  // FK to file, offset, duration, text, diaryId
+  // create foreign key to files table
+  id: text("id").primaryKey(),
+  fileId: text("file_id")
+    .notNull()
+    .references(() => files.id, {
+      onDelete: "cascade",
+    }),
+  offset: integer("offset").notNull(),
+  duration: integer("duration").notNull(),
+  text: text("text").notNull(),
+  embeddings: vector("embeddings", { dimensions: 256 }).notNull(),
 });
 
 // ── Export types ─────────────────────────────────────────────────────
 
+export type File = typeof files.$inferSelect;
 export type Transcription = typeof transcriptions.$inferSelect;
-export type NewTranscription = typeof transcriptions.$inferInsert;

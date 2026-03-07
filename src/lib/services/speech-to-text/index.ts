@@ -1,0 +1,1 @@
+export { speachToText } from "./mock";

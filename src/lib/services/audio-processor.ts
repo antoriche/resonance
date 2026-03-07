@@ -1,136 +1,84 @@
-import { randomUUID } from "node:crypto";
-import type { Transcription, NewTranscription } from "@/lib/db/schema";
-import {
-  insertTranscription,
-  updateTranscription,
-  getTranscriptionById,
-  getAllTranscriptions,
-} from "@/lib/db/operations";
-
-// ── Types ────────────────────────────────────────────────────────────
-
-export interface AudioMetadata {
-  id: string;
-  filename: string;
-}
-
-export interface ProcessingResult {
-  transcriptionId: string;
-  status: "completed" | "failed";
-  text?: string;
-  duration?: number;
-  error?: string;
-}
-
+import type { File } from "@/lib/db/schema";
+import { upsertTranscription, upsertFile } from "@/lib/db/operations";
+import { diarizeSpeaker } from "@/lib/services/speaker-diarization";
+import { speachToText } from "@/lib/services/speech-to-text";
 // ── Audio Processor Service ──────────────────────────────────────────
 
 class AudioProcessor {
   /**
    * Process an audio file: transcribe it and store results in DB
    */
-  async processAudioFile(
-    filePath: string,
-    metadata: AudioMetadata,
-  ): Promise<ProcessingResult> {
-    const transcriptionId = randomUUID();
+  async syncFileData(filePath: string): Promise<{
+    fileId: string;
+  }> {
+    const fileId = filePath;
 
     try {
       // Create initial record with 'pending' status
-      const newTranscription: NewTranscription = {
-        id: transcriptionId,
-        audioFileId: metadata.id,
-        filename: metadata.filename,
+      const newFile: File = {
+        id: fileId,
         filePath,
-        status: "pending",
-        text: null,
-        duration: null,
-        error: null,
-        createdAt: new Date().toISOString(),
-        completedAt: null,
       };
 
-      await insertTranscription(newTranscription);
-      console.log(
-        `[audio-processor] Created transcription record: ${transcriptionId}`,
-      );
-
-      // Update status to 'processing'
-      await updateTranscription(transcriptionId, { status: "processing" });
+      console.log(`[audio-processor] Created file record: ${fileId}`);
 
       // Perform transcription (stubbed for now)
-      const result = await this.transcribeAudio(filePath);
+      const segments = await this.processFile(filePath);
 
-      // Update record with successful result
-      await updateTranscription(transcriptionId, {
-        status: "completed",
-        text: result.text,
-        duration: result.duration,
-        completedAt: new Date().toISOString(),
-      });
+      await upsertFile(newFile);
 
-      console.log(
-        `[audio-processor] Transcription completed: ${transcriptionId}`,
+      await Promise.all(
+        segments.map(async (segment) => {
+          const chunk = await segment;
+          await upsertTranscription({
+            id: `${fileId}-${chunk.timestamp}`,
+            fileId,
+            offset: chunk.timestamp,
+            duration: chunk.duration,
+            text: chunk.text,
+            embeddings: chunk.embeddings,
+          });
+        }),
       );
 
+      console.log(`[audio-processor] Transcription completed: ${fileId}`);
+
       return {
-        transcriptionId,
-        status: "completed",
-        text: result.text,
-        duration: result.duration,
+        fileId,
       };
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Unknown error";
-
-      // Update record with failure
-      await updateTranscription(transcriptionId, {
-        status: "failed",
-        error: errorMessage,
-        completedAt: new Date().toISOString(),
-      });
-
-      console.error(
-        `[audio-processor] Transcription failed: ${transcriptionId}`,
-        error,
-      );
-
-      return {
-        transcriptionId,
-        status: "failed",
-        error: errorMessage,
-      };
+      console.error(`[audio-processor] Transcription failed: ${fileId}`, error);
+      throw error;
     }
   }
 
   /**
-   * Get transcription by ID
-   */
-  async getTranscription(id: string): Promise<Transcription | null> {
-    return await getTranscriptionById(id);
-  }
-
-  /**
-   * Get all transcriptions
-   */
-  async getAllTranscriptions(): Promise<Transcription[]> {
-    return await getAllTranscriptions();
-  }
-
-  /**
-   * Stub transcription function
+   * Stub transcription function that yields text chunks
    * TODO: Replace with actual transcription service (Whisper API, local Whisper, etc.)
    */
-  private async transcribeAudio(
-    filePath: string,
-  ): Promise<{ text: string; duration: number }> {
-    // Simulate processing delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+  private async processFile(filePath: string): Promise<
+    Array<
+      Promise<{
+        timestamp: number;
+        duration: number;
+        embeddings: number[];
+        text: string;
+      }>
+    >
+  > {
+    const segments = await diarizeSpeaker(filePath);
 
-    // Return stub result
-    return {
-      text: `[Transcription pending - service not implemented for ${filePath}]`,
-      duration: 0,
-    };
+    return segments.map(async (segment) => {
+      return speachToText(filePath, {
+        offset: segment.offset,
+        duration: segment.duration,
+      }).then((res) => ({
+        timestamp: segment.offset,
+        duration: segment.duration,
+        text: res.text,
+        embeddings: new Array(256).fill(0), // Placeholder for embeddings
+      }));
+    });
   }
 }
 

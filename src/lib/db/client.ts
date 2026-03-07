@@ -1,12 +1,7 @@
 import { drizzle } from "drizzle-orm/node-postgres";
-import { eq } from "drizzle-orm";
 import { Pool } from "pg";
 import path from "path";
-import {
-  transcriptions,
-  type NewTranscription,
-  type Transcription,
-} from "./schema";
+import { transcriptions, files } from "./schema";
 
 export function createPgClient(databaseUrl: string) {
   console.log("[db] Using PostgreSQL");
@@ -19,6 +14,7 @@ export function createPgClient(databaseUrl: string) {
   return {
     type: "postgres" as const,
     db,
+    files,
     transcriptions,
   };
 }
