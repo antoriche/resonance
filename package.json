@@ -10,7 +10,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/lib/db/migrate.ts",
     "db:studio": "drizzle-kit studio",
-    "watch:uploads": "FILE_WATCHER_ENABLED=true tsx scripts/watch-uploads.ts"
+    "watch:uploads": "FILE_WATCHER_ENABLED=true tsx scripts/watch-uploads.ts",
+    "postinstall": "bash scripts/build-whisper.sh"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.90.21",
@@ -23,6 +24,7 @@
     "lodash": "^4.17.23",
     "music-metadata": "^11.12.1",
     "next": "16.1.6",
+    "nodejs-whisper": "^0.2.9",
     "onnxruntime-node": "^1.24.3",
     "pg": "^8.20.0",
     "react": "19.2.3",
