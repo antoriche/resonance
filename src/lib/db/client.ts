@@ -4,7 +4,6 @@ import path from "path";
 import { transcriptions, files } from "./schema";
 
 export function createPgClient(databaseUrl: string) {
-  console.log("[db] Using PostgreSQL");
   const pool = new Pool({
     connectionString: databaseUrl,
   });

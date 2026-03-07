@@ -13,6 +13,7 @@ import {
 export const files = pgTable("files", {
   id: text("id").primaryKey(),
   filePath: text("file_path").notNull(),
+  recordingTimestamp: timestamp("recording_timestamp").notNull(),
 });
 
 export const transcriptions = pgTable("transcriptions", {

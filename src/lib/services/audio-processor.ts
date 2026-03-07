@@ -2,6 +2,8 @@ import type { File } from "@/lib/db/schema";
 import { upsertTranscription, upsertFile } from "@/lib/db/operations";
 import { diarizeSpeaker } from "@/lib/services/speaker-diarization";
 import { speachToText } from "@/lib/services/speech-to-text";
+import { stat } from "fs/promises";
+import { parseFile } from "music-metadata";
 // ── Audio Processor Service ──────────────────────────────────────────
 
 class AudioProcessor {
@@ -14,10 +16,12 @@ class AudioProcessor {
     const fileId = filePath;
 
     try {
-      // Create initial record with 'pending' status
+      const recordingTimestamp = await this.getRecordingTimestamp(filePath);
+
       const newFile: File = {
         id: fileId,
         filePath,
+        recordingTimestamp,
       };
 
       console.log(`[audio-processor] Created file record: ${fileId}`);
@@ -66,6 +70,8 @@ class AudioProcessor {
       }>
     >
   > {
+    // retreve audio regisration timestamp from file metadata
+    const baseTimestamp = Date.now();
     const diarizationStart = performance.now();
     console.log(`[audio-processor] Starting diarization for file: ${filePath}`);
 
@@ -98,6 +104,45 @@ class AudioProcessor {
         embedding: segment.embedding,
       }));
     });
+  }
+
+  /**
+   * Extract recording timestamp from audio metadata or fall back to file creation time
+   */
+  private async getRecordingTimestamp(filePath: string): Promise<Date> {
+    try {
+      // Try to read audio metadata
+      const metadata = await parseFile(filePath);
+
+      // Check for recording date in various metadata fields
+      const recordingDate =
+        metadata.common.date || // ISO date string
+        metadata.native?.ID3v2?.find((tag) => tag.id === "TDRC")?.value || // ID3v2 Recording time
+        metadata.native?.ID3v2?.find((tag) => tag.id === "TDAT")?.value || // ID3v2 Date
+        metadata.native?.["iTunes"]?.find((tag) => tag.id === "©day")?.value; // iTunes date
+
+      if (
+        recordingDate &&
+        (typeof recordingDate === "string" || typeof recordingDate === "number")
+      ) {
+        const timestamp = new Date(recordingDate).getTime();
+        if (!isNaN(timestamp)) {
+          console.log(
+            `[audio-processor] Using metadata recording date: ${new Date(timestamp).toISOString()}`,
+          );
+          return new Date(timestamp);
+        }
+      }
+    } catch (error) {
+      console.warn(`[audio-processor] Could not read audio metadata: ${error}`);
+    }
+
+    // Fall back to file creation time
+    const fileStats = await stat(filePath);
+    console.log(
+      `[audio-processor] Using file creation time: ${new Date(fileStats.birthtimeMs).toISOString()}`,
+    );
+    return new Date(fileStats.birthtimeMs);
   }
 }
 
