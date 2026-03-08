@@ -35,7 +35,9 @@ export async function streamToDisk(
   let bytesWritten = 0;
 
   // Convert the Web ReadableStream into a Node.js Readable
-  const nodeReadable = Readable.fromWeb(stream as import("stream/web").ReadableStream<Uint8Array>);
+  const nodeReadable = Readable.fromWeb(
+    stream as import("stream/web").ReadableStream<Uint8Array>,
+  );
 
   // Create a transform that counts bytes and enforces the size limit
   const counter = new (await import("node:stream")).Transform({
