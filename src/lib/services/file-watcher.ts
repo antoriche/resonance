@@ -3,8 +3,11 @@ import path from "node:path";
 import { getFileByFilename } from "@/lib/db/operations";
 import { audioProcessor } from "./audio-processor";
 import { UPLOAD_DIR, ALLOWED_EXTENSIONS } from "@/lib/audio/constants";
+import { createLogger } from "@/lib/logger";
 
-// ── Configuration ────────────────────────────────────────────────────
+// ── Configuration ────────────────────────────────────────────
+
+const logger = createLogger("file-watcher");────────
 
 const FILE_WATCHER_ENABLED = process.env.FILE_WATCHER_ENABLED === "true";
 
@@ -18,8 +21,8 @@ class FileWatcher {
    */
   start() {
     if (!FILE_WATCHER_ENABLED) {
-      console.log(
-        "[file-watcher] Disabled (set FILE_WATCHER_ENABLED=true to enable)",
+      logger.info(
+        "Disabled (set FILE_WATCHER_ENABLED=true to enable)",
       );
       return;
     }
@@ -27,9 +30,10 @@ class FileWatcher {
     const allowedExtensions = Array.from(ALLOWED_EXTENSIONS);
     const globPattern = `${UPLOAD_DIR}/**/*{${allowedExtensions.join(",")}}`;
 
-    console.log(`[file-watcher] Starting watcher on: ${UPLOAD_DIR}`);
-    console.log(
-      `[file-watcher] Watching extensions: ${allowedExtensions.join(", ")}`,
+    logger.info({ uploadDir: UPLOAD_DIR }, `Starting watcher`);
+    logger.info(
+      { extensions: allowedExtensions.join(", ") },
+      `Watching extensions`,
     );
 
     this.watcher = chokidar.watch(globPattern, {
@@ -43,10 +47,10 @@ class FileWatcher {
 
     this.watcher.on("add", (filePath: string) => this.handleNewFile(filePath));
     this.watcher.on("error", (error: unknown) => {
-      console.error("[file-watcher] Error:", error);
+      logger.error({ error }, "Error");
     });
 
-    console.log("[file-watcher] Watcher started successfully");
+    logger.info("Watcher started successfully");
   }
 
   /**
@@ -54,10 +58,10 @@ class FileWatcher {
    */
   async stop() {
     if (this.watcher) {
-      console.log("[file-watcher] Stopping watcher...");
+      logger.info("Stopping watcher...");
       await this.watcher.close();
       this.watcher = null;
-      console.log("[file-watcher] Watcher stopped");
+      logger.info("Watcher stopped");
     }
   }
 
@@ -67,13 +71,13 @@ class FileWatcher {
   private async handleNewFile(filePath: string) {
     try {
       const filename = path.basename(filePath);
-      console.log(`[file-watcher] New file detected: ${filename}`);
+      logger.info({ filename }, `New file detected`);
 
       // Check if file is already in database
       const existing = await getFileByFilename(filename);
 
       if (existing) {
-        console.log(`[file-watcher] File already processed: ${filename}`);
+        logger.info({ filename }, `File already processed`);
         return;
       }
 
@@ -82,14 +86,14 @@ class FileWatcher {
       const audioFileId = filenameWithoutExt;
 
       // Trigger processing
-      console.log(`[file-watcher] Triggering processing for: ${filename}`);
+      logger.info({ filename }, `Triggering processing`);
       await audioProcessor.syncFileData(filePath);
 
-      console.log(`[file-watcher] Processing initiated for: ${filename}`);
+      logger.info({ filename }, `Processing initiated`);
     } catch (error) {
-      console.error(
-        `[file-watcher] Failed to process file: ${filePath}`,
-        error,
+      logger.error(
+        { filePath, error },
+        `Failed to process file`,
       );
     }
   }
@@ -102,13 +106,13 @@ export const fileWatcher = new FileWatcher();
 // ── Graceful shutdown ────────────────────────────────────────────────
 
 process.on("SIGINT", async () => {
-  console.log("\n[file-watcher] Received SIGINT, shutting down gracefully...");
+  logger.info("\nReceived SIGINT, shutting down gracefully...");
   await fileWatcher.stop();
   process.exit(0);
 });
 
 process.on("SIGTERM", async () => {
-  console.log("\n[file-watcher] Received SIGTERM, shutting down gracefully...");
+  logger.info("\nReceived SIGTERM, shutting down gracefully...");
   await fileWatcher.stop();
   process.exit(0);
 });

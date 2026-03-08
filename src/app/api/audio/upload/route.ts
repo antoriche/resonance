@@ -11,6 +11,9 @@ import {
 import { streamToDisk, MaxSizeExceededError } from "@/lib/audio/stream-to-disk";
 import { authenticate } from "@/lib/middleware/auth";
 import { audioProcessor } from "@/lib/services/audio-processor";
+import { createLogger } from "@/lib/logger";
+
+const logger = createLogger("audio/upload");
 
 export const runtime = "nodejs";
 
@@ -38,14 +41,14 @@ async function triggerProcessing(
   filename: string,
 ) {
   try {
-    console.log(`[audio/upload] Triggered async processing: ${id}`);
+    logger.info({ id }, `Triggered async processing`);
 
     audioProcessor.syncFileData(destPath, { id, filename }).catch((err) => {
-      console.error(`[audio/upload] Background processing failed: ${id}`, err);
+      logger.error({ id, err }, `Background processing failed`);
     });
   } catch (error) {
     // Don't fail the upload if processing initialization fails
-    console.error(`[audio/upload] Failed to trigger processing: ${id}`, error);
+    logger.error({ id, error }, `Failed to trigger processing`);
   }
 }
 
@@ -192,6 +195,6 @@ function handleStreamError(error: unknown) {
     return jsonError(error.message, 413);
   }
 
-  console.error("[audio/upload] Unexpected error:", error);
+  logger.error({ error }, "Unexpected error");
   return jsonError("Internal server error while saving file.", 500);
 }

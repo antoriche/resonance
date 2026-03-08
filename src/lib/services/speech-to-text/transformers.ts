@@ -1,7 +1,10 @@
 // ── Transformers Speech-to-Text Implementation ─────────────────────
 
+import { createLogger } from "@/lib/logger";
 import { extractAudioSegment } from "../utils/extract-segment";
 import { transformersService } from "./transformers/index";
+
+const logger = createLogger("speech-to-text");
 
 /**
  * Transcribe an audio segment using Transformers.js
@@ -21,8 +24,8 @@ export async function speachToText(
   text: string;
 }> {
   const startTime = Date.now();
-  console.log(
-    `[speech-to-text] Processing segment: ${filePath} (${options.offset}s - ${options.offset + options.duration}s)`,
+  logger.info(
+    `Processing segment: ${filePath} (${options.offset}s - ${options.offset + options.duration}s)`,
   );
 
   // Extract audio segment to temp file
@@ -33,8 +36,8 @@ export async function speachToText(
     options.duration,
   );
   const segmentExtractionTime = Date.now() - segmentStartTime;
-  console.log(
-    `[speech-to-text] Segment extraction took ${segmentExtractionTime}ms`,
+  logger.info(
+    `Segment extraction took ${segmentExtractionTime}ms`,
   );
 
   try {
@@ -43,8 +46,8 @@ export async function speachToText(
     const result = await transformersService.transcribe(segment.path);
     const transcriptionTime = Date.now() - transcribeStartTime;
 
-    console.log(
-      `[speech-to-text] Transcription took ${transcriptionTime}ms to process ${options.duration}ms of audio`,
+    logger.info(
+      `Transcription took ${transcriptionTime}ms to process ${options.duration}ms of audio`,
     );
 
     return {

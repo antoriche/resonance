@@ -2,6 +2,9 @@
 
 import { extractAudioSegment } from "../utils/extract-segment";
 import { whisperService } from "./whisper/index";
+import { createLogger } from "@/lib/logger";
+
+const logger = createLogger("speech-to-text");
 
 /**
  * Transcribe an audio segment using local Whisper
@@ -20,8 +23,8 @@ export async function speachToText(
 ): Promise<{
   text: string;
 }> {
-  console.log(
-    `[speech-to-text] Processing segment: ${filePath} (${options.offset}s - ${options.offset + options.duration}s)`,
+  logger.info(
+    `Processing segment: ${filePath} (${options.offset}s - ${options.offset + options.duration}s)`,
   );
 
   // Extract audio segment to temp file

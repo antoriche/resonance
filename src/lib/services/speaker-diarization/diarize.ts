@@ -4,6 +4,9 @@ import Ffmpeg, * as ffmpeg from "fluent-ffmpeg";
 import { createWriteStream, unlinkSync } from "fs";
 import { tmpdir } from "os";
 import { randomBytes } from "crypto";
+import { createLogger } from "@/lib/logger";
+
+const logger = createLogger("diarize");
 
 interface DiarizationSegment {
   offset: number;
@@ -31,7 +34,7 @@ export async function diarizeSpeaker(
     const segmentationModelPath = join(modelDir, "segmentation.onnx");
     const embeddingModelPath = join(modelDir, "embedding.onnx");
 
-    console.log(`[diarize] Loading models from: ${modelDir}`);
+    logger.info({ modelDir }, `Loading models`);
 
     const segmentationSession = await ort.InferenceSession.create(
       segmentationModelPath,
@@ -40,33 +43,33 @@ export async function diarizeSpeaker(
       await ort.InferenceSession.create(embeddingModelPath);
 
     // Log model input/output info
-    console.log(
-      "[diarize] Segmentation model inputs:",
-      segmentationSession.inputNames,
+    logger.info(
+      { inputs: segmentationSession.inputNames },
+      "Segmentation model inputs",
     );
-    console.log(
-      "[diarize] Segmentation model outputs:",
-      segmentationSession.outputNames,
+    logger.info(
+      { outputs: segmentationSession.outputNames },
+      "Segmentation model outputs",
     );
-    console.log(
-      "[diarize] Embedding model inputs:",
-      embeddingSession.inputNames,
+    logger.info(
+      { inputs: embeddingSession.inputNames },
+      "Embedding model inputs",
     );
-    console.log(
-      "[diarize] Embedding model outputs:",
-      embeddingSession.outputNames,
+    logger.info(
+      { outputs: embeddingSession.outputNames },
+      "Embedding model outputs",
     );
 
     // Process audio file
     const audioData = await processAudioFile(filePath);
-    console.log(`[diarize] Processed audio: ${audioData.length} samples`);
+    logger.info({ samples: audioData.length }, `Processed audio`);
 
     // Step 1: Segmentation - detect speech regions
     const segments = await performSegmentation(audioData, segmentationSession);
-    console.log(`[diarize] Found ${segments.length} speech segments`);
+    logger.info({ count: segments.length }, `Found speech segments`);
     segments.forEach((seg, idx) => {
-      console.log(
-        `[diarize]   Segment ${idx}: ${(seg.start / 1000).toFixed(2)}s - ${(seg.end / 1000).toFixed(2)}s (duration: ${((seg.end - seg.start) / 1000).toFixed(2)}s)`,
+      logger.info(
+        `Segment ${idx}: ${(seg.start / 1000).toFixed(2)}s - ${(seg.end / 1000).toFixed(2)}s (duration: ${((seg.end - seg.start) / 1000).toFixed(2)}s)`,
       );
     });
 
@@ -82,7 +85,7 @@ export async function diarizeSpeaker(
 
     return diarizedSegments;
   } catch (error) {
-    console.error("Error during speaker diarization:", error);
+    logger.error({ error }, "Error during speaker diarization");
     throw error;
   }
 }
@@ -99,7 +102,7 @@ async function processAudioFile(filePath: string): Promise<Float32Array> {
     );
     const writeStream = createWriteStream(tempFile);
 
-    console.log(`[diarize] Decoding audio file: ${filePath}`);
+    logger.info({ filePath }, `Decoding audio file`);
 
     Ffmpeg(filePath)
       .audioFrequency(16000) // Resample to 16kHz
@@ -107,7 +110,7 @@ async function processAudioFile(filePath: string): Promise<Float32Array> {
       .audioCodec("pcm_f32le") // Output as 32-bit float PCM
       .format("f32le")
       .on("error", (err) => {
-        console.error("[diarize] FFmpeg error:", err);
+        logger.error({ err }, "FFmpeg error");
         reject(err);
       })
       .on("end", () => {
@@ -125,8 +128,9 @@ async function processAudioFile(filePath: string): Promise<Float32Array> {
         // Clean up temp file
         unlinkSync(tempFile);
 
-        console.log(
-          `[diarize] Audio decoded: ${float32Data.length} samples, ${float32Data.length / 16000}s duration`,
+        logger.info(
+          { samples: float32Data.length, duration: float32Data.length / 16000 },
+          `Audio decoded`,
         );
         resolve(float32Data);
       })
@@ -187,7 +191,7 @@ async function processSegmentationChunk(
   // Prepare input tensor - try different shapes based on model
   const inputName = session.inputNames[0];
 
-  console.log(`[diarize] Segmentation chunk: ${audioChunk.length} samples`);
+  logger.info({ samples: audioChunk.length }, `Segmentation chunk`);
 
   // Try shape [batch, channels, samples]
   const inputTensor = new ort.Tensor("float32", audioChunk, [
@@ -201,8 +205,8 @@ async function processSegmentationChunk(
   const outputName = session.outputNames[0];
   const outputTensor = outputs[outputName];
 
-  console.log(`[diarize] Segmentation output shape:`, outputTensor.dims);
-  console.log(`[diarize] Segmentation output size:`, outputTensor.data.length);
+  logger.info({ dims: outputTensor.dims }, `Segmentation output shape`);
+  logger.info({ size: outputTensor.data.length }, `Segmentation output size`);
 
   // Parse output - shape is [batch, frames, classes]
   // For pyannote models, classes typically represent speaker activity
@@ -214,8 +218,8 @@ async function processSegmentationChunk(
   const sampleRate = 16000;
   const hopLength = Math.floor(audioChunk.length / numFrames);
 
-  console.log(
-    `[diarize] Frames: ${numFrames}, Classes: ${numClasses}, Hop: ${hopLength} samples`,
+  logger.info(
+    `Frames: ${numFrames}, Classes: ${numClasses}, Hop: ${hopLength} samples`,
   );
 
   // Debug: Check some sample values and find max values across all frames
@@ -224,15 +228,15 @@ async function processSegmentationChunk(
   for (let c = 0; c < numClasses; c++) {
     sampleValues.push(data[sampleIdx * numClasses + c].toFixed(3));
   }
-  console.log(`[diarize] Sample frame ${sampleIdx} raw values:`, sampleValues);
+  logger.info({ sampleIdx, values: sampleValues }, `Sample frame raw values`);
 
   // Apply sigmoid activation and check again
   const sigmoidValues = sampleValues.map((v) =>
     (1 / (1 + Math.exp(-parseFloat(v)))).toFixed(3),
   );
-  console.log(
-    `[diarize] Sample frame ${sampleIdx} after sigmoid:`,
-    sigmoidValues,
+  logger.info(
+    { sampleIdx, values: sigmoidValues },
+    `Sample frame after sigmoid`,
   );
 
   // Find max values across all frames for each class
@@ -243,13 +247,13 @@ async function processSegmentationChunk(
       maxValuesByClass[classIdx] = Math.max(maxValuesByClass[classIdx], logit);
     }
   }
-  console.log(
-    `[diarize] Max logit values by class:`,
-    maxValuesByClass.map((v) => v.toFixed(3)),
+  logger.info(
+    { values: maxValuesByClass.map((v) => v.toFixed(3)) },
+    `Max logit values by class`,
   );
-  console.log(
-    `[diarize] Max sigmoid values by class:`,
-    maxValuesByClass.map((v) => (1 / (1 + Math.exp(-v))).toFixed(3)),
+  logger.info(
+    { values: maxValuesByClass.map((v) => (1 / (1 + Math.exp(-v))).toFixed(3)) },
+    `Max sigmoid values by class`,
   );
 
   const threshold = 0.3; // Much lower threshold since activations are weak
@@ -291,7 +295,7 @@ async function processSegmentationChunk(
     }
   }
 
-  console.log(`[diarize] Chunk found ${segments.length} segments`);
+  logger.info({ count: segments.length }, `Chunk found segments`);
 
   return segments;
 }
@@ -354,14 +358,16 @@ async function extractEmbeddings(
       chunk = chunk.slice(offset, offset + targetSamples);
     }
 
-    console.log(
-      `[diarize] Processing embedding for segment ${segment.start}-${segment.end}ms, audio length: ${chunk.length}`,
+    logger.info(
+      { segment: `${segment.start}-${segment.end}ms`, audioLength: chunk.length },
+      `Processing embedding for segment`,
     );
 
     // Extract mel-spectrogram features
     const melSpec = extractMelSpectrogram(chunk, sampleRate);
-    console.log(
-      `[diarize] Mel-spectrogram shape: [${melSpec.length / 80}, 80]`,
+    logger.info(
+      { shape: `[${melSpec.length / 80}, 80]` },
+      `Mel-spectrogram shape`,
     );
 
     // Prepare input tensor - shape should be [batch, time_frames, 80]
@@ -369,8 +375,9 @@ async function extractEmbeddings(
     const numFrames = melSpec.length / 80;
     const inputTensor = new ort.Tensor("float32", melSpec, [1, numFrames, 80]);
 
-    console.log(
-      `[diarize] Embedding input tensor shape: [1, ${numFrames}, 80]`,
+    logger.info(
+      { shape: `[1, ${numFrames}, 80]` },
+      `Embedding input tensor shape`,
     );
 
     // Run inference
@@ -378,7 +385,7 @@ async function extractEmbeddings(
     const outputName = session.outputNames[0];
     const embedding = outputs[outputName].data as Float32Array;
 
-    console.log(`[diarize] Got embedding of size: ${embedding.length}`);
+    logger.info({ size: embedding.length }, `Got embedding`);
     embeddings.push(embedding);
   }
 
@@ -537,7 +544,7 @@ function clusterSpeakers(
   const speakerMap: number[] = [];
   let nextSpeakerId = 1;
 
-  console.log(`[diarize] Clustering ${embeddings.length} embeddings`);
+  logger.info({ count: embeddings.length }, `Clustering embeddings`);
 
   for (let i = 0; i < embeddings.length; i++) {
     let assignedSpeaker = -1;
@@ -547,8 +554,8 @@ function clusterSpeakers(
     // Compare with existing speakers
     for (let j = 0; j < i; j++) {
       const similarity = cosineSimilarity(embeddings[i], embeddings[j]);
-      console.log(
-        `[diarize] Similarity between segment ${i} and ${j}: ${similarity.toFixed(3)}`,
+      logger.info(
+        `Similarity between segment ${i} and ${j}: ${similarity.toFixed(3)}`,
       );
 
       if (similarity > threshold && similarity > maxSimilarity) {
@@ -561,10 +568,10 @@ function clusterSpeakers(
     // Assign new speaker if no match found
     if (assignedSpeaker === -1) {
       assignedSpeaker = nextSpeakerId++;
-      console.log(`[diarize] Segment ${i}: NEW speaker ${assignedSpeaker}`);
+      logger.info(`Segment ${i}: NEW speaker ${assignedSpeaker}`);
     } else {
-      console.log(
-        `[diarize] Segment ${i}: Matched with segment ${bestMatch} (speaker ${assignedSpeaker}, similarity: ${maxSimilarity.toFixed(3)})`,
+      logger.info(
+        `Segment ${i}: Matched with segment ${bestMatch} (speaker ${assignedSpeaker}, similarity: ${maxSimilarity.toFixed(3)})`,
       );
     }
 
@@ -578,7 +585,7 @@ function clusterSpeakers(
     embedding: Array.from(embeddings[idx]),
   }));
 
-  console.log(`[diarize] Identified ${nextSpeakerId - 1} unique speakers`);
+  logger.info({ uniqueSpeakers: nextSpeakerId - 1 }, `Identified unique speakers`);
 
   return diarizedSegments;
 }

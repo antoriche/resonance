@@ -2,8 +2,11 @@ import { nodewhisper } from "nodejs-whisper";
 import { existsSync } from "fs";
 import { resolve } from "path";
 import { getWhisperConfig, type WhisperConfig } from "./config";
+import { createLogger } from "@/lib/logger";
 
-// ── Whisper Service ─────────────────────────────────────────────────
+// ── Whisper Service ─────────────────────────────────────────
+
+const logger = createLogger("whisper-service");
 
 export interface TranscriptionOptions {
   language?: string;
@@ -33,8 +36,9 @@ class WhisperService {
       ...defaultConfig,
       ...config,
     };
-    console.log(
-      `[whisper-service] Initialized with model: ${this.config.modelName}`,
+    logger.info(
+      { model: this.config.modelName },
+      `Initialized with model`,
     );
   }
 
@@ -51,8 +55,8 @@ class WhisperService {
     }
 
     const startTime = Date.now();
-    console.log(`[whisper-service] Transcribing: ${audioFilePath}`);
-    console.log(`[whisper-service] Using model: ${this.config.modelName}`);
+    logger.info({ audioFilePath }, `Transcribing`);
+    logger.info({ model: this.config.modelName }, `Using model`);
 
     try {
       // Resolve model path to absolute if provided
@@ -61,7 +65,7 @@ class WhisperService {
         : undefined;
 
       if (resolvedModelPath) {
-        console.log(`[whisper-service] Using model path: ${resolvedModelPath}`);
+        logger.info({ modelPath: resolvedModelPath }, `Using model path`);
         // Verify model file exists
         if (!existsSync(resolvedModelPath)) {
           throw new Error(`Model file not found at: ${resolvedModelPath}`);
@@ -100,18 +104,18 @@ class WhisperService {
       const output = await nodewhisper(audioFilePath, whisperOptions);
 
       const duration = Date.now() - startTime;
-      console.log(`[whisper-service] Transcription completed in ${duration}ms`);
+      logger.info({ duration }, `Transcription completed in ${duration}ms`);
 
       // Extract text from output
       const text = typeof output === "string" ? output : "";
-      console.log(`[whisper-service] Text length: ${text.length} characters`);
+      logger.info({ length: text.length }, `Text length: ${text.length} characters`);
 
       return {
         text: text.trim(),
         duration: duration / 1000, // Convert to seconds
       };
     } catch (error) {
-      console.error("[whisper-service] Transcription failed:", error);
+      logger.error({ error }, "Transcription failed");
 
       if (
         error instanceof Error &&

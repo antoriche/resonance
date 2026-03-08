@@ -4,8 +4,11 @@ import { join } from "path";
 import { randomBytes } from "crypto";
 import { unlink, stat, access } from "fs/promises";
 import { constants } from "fs";
+import { createLogger } from "@/lib/logger";
 
 // ── Audio Segment Extraction ────────────────────────────────────────
+
+const logger = createLogger("extract-segment");
 
 export interface SegmentExtractionResult {
   path: string;
@@ -30,8 +33,9 @@ export async function extractAudioSegment(
   try {
     await access(audioPath, constants.R_OK);
     const sourceStats = await stat(audioPath);
-    console.log(
-      `[extract-segment] Source file: ${audioPath} (${sourceStats.size} bytes)`,
+    logger.info(
+      { audioPath, size: sourceStats.size },
+      `Source file: ${sourceStats.size} bytes`,
     );
 
     if (sourceStats.size === 0) {
@@ -52,8 +56,8 @@ export async function extractAudioSegment(
   const offsetSeconds = offset / 1000;
   const durationSeconds = duration / 1000;
 
-  console.log(
-    `[extract-segment] Converting: ${offset}ms -> ${offsetSeconds}s, ${duration}ms -> ${durationSeconds}s`,
+  logger.info(
+    `Converting: ${offset}ms -> ${offsetSeconds}s, ${duration}ms -> ${durationSeconds}s`,
   );
 
   // Generate unique temp file path
@@ -70,18 +74,18 @@ export async function extractAudioSegment(
       .audioChannels(1) // Mono
       .format("wav")
       .on("start", (commandLine) => {
-        console.log(
-          `[extract-segment] Extracting segment: ${offsetSeconds}s - ${offsetSeconds + durationSeconds}s (${offset}ms - ${offset + duration}ms)`,
+        logger.info(
+          `Extracting segment: ${offsetSeconds}s - ${offsetSeconds + durationSeconds}s (${offset}ms - ${offset + duration}ms)`,
         );
-        console.log(`[extract-segment] FFmpeg command: ${commandLine}`);
+        logger.info({ commandLine }, `FFmpeg command`);
       })
       .on("stderr", (stderrLine) => {
         // Capture stderr for debugging
         stderrOutput += stderrLine + "\n";
       })
       .on("end", async () => {
-        console.log(`[extract-segment] FFmpeg process completed`);
-        console.log(`[extract-segment] Verifying output: ${tempPath}`);
+        logger.info(`FFmpeg process completed`);
+        logger.info({ tempPath }, `Verifying output`);
 
         // Wait for file to be fully written and verify it has content
         // This prevents race conditions where 'end' fires before disk flush
@@ -96,19 +100,19 @@ export async function extractAudioSegment(
               const fileStats = await stat(tempPath);
 
               if (fileStats.size >= minFileSize) {
-                console.log(
-                  `[extract-segment] File verified: ${fileStats.size} bytes`,
+                logger.info(
+                  `File verified: ${fileStats.size} bytes`,
                 );
                 resolve({
                   path: tempPath,
                   cleanup: async () => {
                     try {
                       await unlink(tempPath);
-                      console.log(`[extract-segment] Cleaned up: ${tempPath}`);
+                      logger.info({ tempPath }, `Cleaned up`);
                     } catch (error) {
-                      console.warn(
-                        `[extract-segment] Failed to cleanup ${tempPath}:`,
-                        error,
+                      logger.warn(
+                        { tempPath, error },
+                        `Failed to cleanup`,
                       );
                     }
                   },
@@ -116,12 +120,12 @@ export async function extractAudioSegment(
                 return;
               }
 
-              console.log(
-                `[extract-segment] File too small (${fileStats.size} bytes), waiting... (attempt ${attempts + 1}/${maxAttempts})`,
+              logger.info(
+                `File too small (${fileStats.size} bytes), waiting... (attempt ${attempts + 1}/${maxAttempts})`,
               );
             } catch (statError) {
-              console.log(
-                `[extract-segment] File not ready, waiting... (attempt ${attempts + 1}/${maxAttempts})`,
+              logger.info(
+                `File not ready, waiting... (attempt ${attempts + 1}/${maxAttempts})`,
               );
             }
 
@@ -130,9 +134,9 @@ export async function extractAudioSegment(
           }
 
           // If we get here, file never became valid - log stderr for debugging
-          console.error(
-            "[extract-segment] FFmpeg stderr output:",
-            stderrOutput,
+          logger.error(
+            { stderrOutput },
+            "FFmpeg stderr output",
           );
           reject(
             new Error(
@@ -140,9 +144,9 @@ export async function extractAudioSegment(
             ),
           );
         } catch (validationError) {
-          console.error(
-            "[extract-segment] FFmpeg stderr output:",
-            stderrOutput,
+          logger.error(
+            { stderrOutput },
+            "FFmpeg stderr output",
           );
           reject(
             new Error(`Failed to validate extracted file: ${validationError}`),
@@ -150,8 +154,8 @@ export async function extractAudioSegment(
         }
       })
       .on("error", (err) => {
-        console.error("[extract-segment] FFmpeg error:", err);
-        console.error("[extract-segment] FFmpeg stderr:", stderrOutput);
+        logger.error({ err }, "FFmpeg error");
+        logger.error({ stderrOutput }, "FFmpeg stderr");
         reject(new Error(`Failed to extract audio segment: ${err.message}`));
       })
       .save(tempPath);

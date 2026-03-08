@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import { getAllTranscriptions } from "@/lib/db/operations";
+import { createLogger } from "@/lib/logger";
+
+const logger = createLogger("API");
 
 export async function GET() {
   try {
@@ -11,7 +14,7 @@ export async function GET() {
       count: transcriptions.length,
     });
   } catch (error) {
-    console.error("[API] Error fetching transcriptions:", error);
+    logger.error({ error }, "Error fetching transcriptions");
 
     return NextResponse.json(
       {

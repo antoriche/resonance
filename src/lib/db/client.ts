@@ -2,6 +2,9 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import path from "path";
 import { transcriptions, files } from "./schema";
+import { createLogger } from "@/lib/logger";
+
+const logger = createLogger("db");
 
 export function createPgClient(databaseUrl: string) {
   const pool = new Pool({
@@ -27,7 +30,7 @@ export type PgClient = ReturnType<typeof createPgClient>;
  * @returns {Promise<string>} The connection string for the embedded PostgreSQL instance.
  */
 async function setupLocalDatabase() {
-  console.log("[db] Starting embedded PostgreSQL for development...");
+  logger.info("Starting embedded PostgreSQL for development...");
 
   const port = 5433;
   const username = "postgres";
@@ -48,19 +51,19 @@ async function setupLocalDatabase() {
 
   // Construct connection string from configuration
   const embeddedUrl = `postgresql://${username}:${password}@localhost:${port}/postgres`;
-  console.log("[db] Embedded PostgreSQL started successfully");
+  logger.info("Embedded PostgreSQL started successfully");
 
   // Graceful shutdown
   process.on("beforeExit", async () => {
     if (embeddedPg) {
-      console.log("[db] Stopping embedded PostgreSQL...");
+      logger.info("Stopping embedded PostgreSQL...");
       await embeddedPg.stop();
     }
   });
 
   process.on("SIGINT", async () => {
     if (embeddedPg) {
-      console.log("[db] Stopping embedded PostgreSQL...");
+      logger.info("Stopping embedded PostgreSQL...");
       await embeddedPg.stop();
     }
     process.exit(0);

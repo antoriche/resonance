@@ -4,7 +4,10 @@ import { diarizeSpeaker } from "@/lib/services/speaker-diarization";
 import { speachToText } from "@/lib/services/speech-to-text";
 import { stat } from "fs/promises";
 import { parseFile } from "music-metadata";
-// ── Audio Processor Service ──────────────────────────────────────────
+import { createLogger } from "@/lib/logger";
+// ── Audio Processor Service ──────────────────────────────────────
+
+const logger = createLogger("audio-processor");
 
 class AudioProcessor {
   /**
@@ -24,7 +27,7 @@ class AudioProcessor {
         recordingTimestamp,
       };
 
-      console.log(`[audio-processor] Created file record: ${fileId}`);
+      logger.info({ fileId }, `Created file record`);
 
       // Perform transcription (stubbed for now)
       const segments = await this.processFile(filePath);
@@ -45,13 +48,13 @@ class AudioProcessor {
         }),
       );
 
-      console.log(`[audio-processor] Transcription completed: ${fileId}`);
+      logger.info({ fileId }, `Transcription completed`);
 
       return {
         fileId,
       };
     } catch (error) {
-      console.error(`[audio-processor] Transcription failed: ${fileId}`, error);
+      logger.error({ fileId, error }, `Transcription failed`);
       throw error;
     }
   }
@@ -73,24 +76,27 @@ class AudioProcessor {
     // retreve audio regisration timestamp from file metadata
     const baseTimestamp = Date.now();
     const diarizationStart = performance.now();
-    console.log(`[audio-processor] Starting diarization for file: ${filePath}`);
+    logger.info({ filePath }, `Starting diarization for file`);
 
     const segments = await diarizeSpeaker(filePath);
 
     const diarizationEnd = performance.now();
     const diarizationDuration = (diarizationEnd - diarizationStart) / 1000; // Convert to seconds
 
-    console.log(
-      `[audio-processor] Diarization completed in ${diarizationDuration.toFixed(2)}s, ${segments.length} segments found for file: ${filePath}`,
-      JSON.stringify(
-        segments.map((s) => ({
+    logger.info(
+      {
+        filePath,
+        duration: diarizationDuration.toFixed(2),
+        segmentCount: segments.length,
+        segments: segments.map((s) => ({
           ...s,
           embedding: `[${s.embedding
             .slice(0, 5)
             .map((v) => v.toFixed(2))
             .join(", ")}...]`,
         })),
-      ),
+      },
+      `Diarization completed in ${diarizationDuration.toFixed(2)}s, ${segments.length} segments found`,
     );
 
     return segments.map(async (segment) => {
@@ -127,20 +133,22 @@ class AudioProcessor {
       ) {
         const timestamp = new Date(recordingDate).getTime();
         if (!isNaN(timestamp)) {
-          console.log(
-            `[audio-processor] Using metadata recording date: ${new Date(timestamp).toISOString()}`,
+          logger.info(
+            { timestamp: new Date(timestamp).toISOString() },
+            `Using metadata recording date`,
           );
           return new Date(timestamp);
         }
       }
     } catch (error) {
-      console.warn(`[audio-processor] Could not read audio metadata: ${error}`);
+      logger.warn({ error }, `Could not read audio metadata`);
     }
 
     // Fall back to file creation time
     const fileStats = await stat(filePath);
-    console.log(
-      `[audio-processor] Using file creation time: ${new Date(fileStats.birthtimeMs).toISOString()}`,
+    logger.info(
+      { timestamp: new Date(fileStats.birthtimeMs).toISOString() },
+      `Using file creation time`,
     );
     return new Date(fileStats.birthtimeMs);
   }

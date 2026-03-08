@@ -4,8 +4,11 @@ import {
 } from "@xenova/transformers";
 import { WaveFile } from "wavefile";
 import { readFileSync } from "fs";
+import { createLogger } from "@/lib/logger";
 
 // ── Transformers Service ────────────────────────────────────────────
+
+const logger = createLogger("transformers-service");
 
 export interface TranscriptionOptions {
   language?: string;
@@ -28,8 +31,8 @@ class TransformersService {
   constructor(modelName?: string) {
     const defaultModel = process.env.WHISPER_MODEL || "base";
     this.modelName = modelName || `Xenova/whisper-${defaultModel}`;
-    console.log(
-      `[transformers-service] Initialized with model: ${this.modelName}`,
+    logger.info(
+      `Initialized with model: ${this.modelName}`,
     );
   }
 
@@ -50,16 +53,16 @@ class TransformersService {
     }
 
     this.isInitializing = true;
-    console.log(`[transformers-service] Loading model: ${this.modelName}`);
+    logger.info(`Loading model: ${this.modelName}`);
 
     try {
       this.transcriber = await pipeline(
         "automatic-speech-recognition",
         this.modelName,
       );
-      console.log(`[transformers-service] Model loaded successfully`);
+      logger.info(`Model loaded successfully`);
     } catch (error) {
-      console.error("[transformers-service] Failed to load model:", error);
+      logger.error({ error }, "Failed to load model");
       throw error;
     } finally {
       this.isInitializing = false;
@@ -80,8 +83,8 @@ class TransformersService {
       // Type assertion for fmt object
       const fmt = wav.fmt as any;
 
-      console.log(
-        `[transformers-service] Original audio: ${fmt.sampleRate}Hz, ${fmt.numChannels} channel(s), ${fmt.bitsPerSample}-bit`,
+      logger.info(
+        `Original audio: ${fmt.sampleRate}Hz, ${fmt.numChannels} channel(s), ${fmt.bitsPerSample}-bit`,
       );
 
       // Try to get samples
@@ -91,8 +94,9 @@ class TransformersService {
 
       // Check if WAV file is empty
       if (!samples || samples.length === 0) {
-        console.warn(
-          `[transformers-service] Empty WAV file detected, skipping: ${audioFilePath}`,
+        logger.warn(
+          { audioFilePath },
+          `Empty WAV file detected, skipping`,
         );
         return null;
       }
@@ -100,7 +104,7 @@ class TransformersService {
       // Convert to 16kHz if needed (Whisper expects 16kHz)
       if (fmt.sampleRate !== 16000) {
         wav.toSampleRate(16000);
-        console.log(`[transformers-service] Resampled to 16kHz`);
+        logger.info(`Resampled to 16kHz`);
       }
 
       let audioData: Float32Array;
@@ -131,13 +135,13 @@ class TransformersService {
         audioData[i] = audioData[i] / maxValue;
       }
 
-      console.log(
-        `[transformers-service] Loaded audio: ${audioData.length} samples at 16kHz (${(audioData.length / 16000).toFixed(2)}s)`,
+      logger.info(
+        `Loaded audio: ${audioData.length} samples at 16kHz (${(audioData.length / 16000).toFixed(2)}s)`,
       );
 
       return audioData;
     } catch (error) {
-      console.error("[transformers-service] Failed to load audio data:", error);
+      logger.error({ error }, "Failed to load audio data");
       throw new Error(`Failed to decode audio file: ${error}`);
     }
   }
@@ -150,7 +154,7 @@ class TransformersService {
     options?: TranscriptionOptions,
   ): Promise<TranscriptionResult> {
     const startTime = Date.now();
-    console.log(`[transformers-service] Transcribing: ${audioFilePath}`);
+    logger.info({ audioFilePath }, `Transcribing`);
 
     try {
       // Ensure model is loaded
@@ -165,7 +169,7 @@ class TransformersService {
 
       // Skip empty audio files
       if (!audioData || audioData.length === 0) {
-        console.warn(`[transformers-service] Skipping empty audio file`);
+        logger.warn(`Skipping empty audio file`);
         return {
           text: "",
           duration: (Date.now() - startTime) / 1000,
@@ -184,29 +188,29 @@ class TransformersService {
         transcribeOptions.language = options.language;
       }
 
-      console.log(
-        `[transformers-service] Transcription options:`,
-        transcribeOptions,
+      logger.info(
+        { transcribeOptions },
+        `Transcription options`,
       );
-      console.log(
-        `[transformers-service] Audio data stats: length=${audioData.length}, min=${Math.min(...audioData).toFixed(3)}, max=${Math.max(...audioData).toFixed(3)}`,
+      logger.info(
+        `Audio data stats: length=${audioData.length}, min=${Math.min(...audioData).toFixed(3)}, max=${Math.max(...audioData).toFixed(3)}`,
       );
 
       // Run transcription with raw audio data
       const output: any = await this.transcriber(audioData, transcribeOptions);
 
       const duration = Date.now() - startTime;
-      console.log(
-        `[transformers-service] Transcription completed in ${duration}ms`,
+      logger.info(
+        `Transcription completed in ${duration}ms`,
       );
-      console.log(
-        `[transformers-service] Output type: ${typeof output}, isArray: ${Array.isArray(output)}`,
+      logger.info(
+        `Output type: ${typeof output}, isArray: ${Array.isArray(output)}`,
       );
-      console.log(
-        `[transformers-service] Output keys:`,
-        output ? Object.keys(output) : "null",
+      logger.info(
+        { keys: output ? Object.keys(output) : "null" },
+        `Output keys`,
       );
-      console.log(`[transformers-service] Output:`, output);
+      logger.info({ output }, `Output`);
 
       // Extract text from output
       let text = "";
@@ -226,9 +230,9 @@ class TransformersService {
         }
       }
 
-      console.log(`[transformers-service] Extracted text: "${text}"`);
-      console.log(
-        `[transformers-service] Text length: ${text.length} characters`,
+      logger.info(`Extracted text: "${text}"`);
+      logger.info(
+        `Text length: ${text.length} characters`,
       );
 
       return {
@@ -236,7 +240,7 @@ class TransformersService {
         duration: duration / 1000, // Convert to seconds
       };
     } catch (error) {
-      console.error("[transformers-service] Transcription failed:", error);
+      logger.error({ error }, "Transcription failed");
       throw error;
     }
   }
@@ -245,7 +249,7 @@ class TransformersService {
    * Change the model (useful for switching between model sizes)
    */
   async setModel(modelName: string): Promise<void> {
-    console.log(`[transformers-service] Switching to model: ${modelName}`);
+    logger.info({ modelName }, `Switching to model`);
     this.modelName = modelName;
     this.transcriber = null; // Force re-initialization
     await this.initialize();
