@@ -1,4 +1,7 @@
-import { pipeline, AutomaticSpeechRecognitionPipeline } from "@xenova/transformers";
+import {
+  pipeline,
+  AutomaticSpeechRecognitionPipeline,
+} from "@xenova/transformers";
 import { WaveFile } from "wavefile";
 import { readFileSync } from "fs";
 
@@ -69,35 +72,42 @@ class TransformersService {
     try {
       // Read the audio file
       const buffer = readFileSync(audioFilePath);
-      
+
       // Decode WAV file
       const wav = new WaveFile(buffer);
-      
+
       // Type assertion for fmt object
       const fmt = wav.fmt as any;
-      
-      console.log(`[transformers-service] Original audio: ${fmt.sampleRate}Hz, ${fmt.numChannels} channel(s), ${fmt.bitsPerSample}-bit`);
-      
+
+      console.log(
+        `[transformers-service] Original audio: ${fmt.sampleRate}Hz, ${fmt.numChannels} channel(s), ${fmt.bitsPerSample}-bit`,
+      );
+
       // Try to get samples
-      const samples = wav.getSamples(true, Float32Array) as Float32Array | Float64Array;
-      
+      const samples = wav.getSamples(true, Float32Array) as
+        | Float32Array
+        | Float64Array;
+
       // Check if WAV file is empty
       if (!samples || samples.length === 0) {
-        console.warn(`[transformers-service] Empty WAV file detected, skipping: ${audioFilePath}`);
+        console.warn(
+          `[transformers-service] Empty WAV file detected, skipping: ${audioFilePath}`,
+        );
         return null;
       }
-      
+
       // Convert to 16kHz if needed (Whisper expects 16kHz)
       if (fmt.sampleRate !== 16000) {
         wav.toSampleRate(16000);
         console.log(`[transformers-service] Resampled to 16kHz`);
       }
-      
+
       let audioData: Float32Array;
-      
+
       // Ensure samples is Float32Array
-      const samplesFloat32 = samples instanceof Float32Array ? samples : new Float32Array(samples);
-      
+      const samplesFloat32 =
+        samples instanceof Float32Array ? samples : new Float32Array(samples);
+
       // For mono, samples is already what we need
       // For stereo with interleaved=true, we need to extract only one channel
       if (fmt.numChannels === 1) {
@@ -111,7 +121,7 @@ class TransformersService {
           audioData[i] = samplesFloat32[i * fmt.numChannels];
         }
       }
-      
+
       // Normalize audio data to [-1.0, 1.0] range
       // WaveFile returns samples in their original scale (e.g., 16-bit = -32768 to +32767)
       // Whisper expects normalized float values
@@ -119,9 +129,11 @@ class TransformersService {
       for (let i = 0; i < audioData.length; i++) {
         audioData[i] = audioData[i] / maxValue;
       }
-      
-      console.log(`[transformers-service] Loaded audio: ${audioData.length} samples at 16kHz (${(audioData.length / 16000).toFixed(2)}s)`);
-      
+
+      console.log(
+        `[transformers-service] Loaded audio: ${audioData.length} samples at 16kHz (${(audioData.length / 16000).toFixed(2)}s)`,
+      );
+
       return audioData;
     } catch (error) {
       console.error("[transformers-service] Failed to load audio data:", error);
@@ -175,15 +187,24 @@ class TransformersService {
         `[transformers-service] Transcription options:`,
         transcribeOptions,
       );
-      console.log(`[transformers-service] Audio data stats: length=${audioData.length}, min=${Math.min(...audioData).toFixed(3)}, max=${Math.max(...audioData).toFixed(3)}`);
+      console.log(
+        `[transformers-service] Audio data stats: length=${audioData.length}, min=${Math.min(...audioData).toFixed(3)}, max=${Math.max(...audioData).toFixed(3)}`,
+      );
 
       // Run transcription with raw audio data
       const output: any = await this.transcriber(audioData, transcribeOptions);
 
       const duration = Date.now() - startTime;
-      console.log(`[transformers-service] Transcription completed in ${duration}ms`);
-      console.log(`[transformers-service] Output type: ${typeof output}, isArray: ${Array.isArray(output)}`);
-      console.log(`[transformers-service] Output keys:`, output ? Object.keys(output) : 'null');
+      console.log(
+        `[transformers-service] Transcription completed in ${duration}ms`,
+      );
+      console.log(
+        `[transformers-service] Output type: ${typeof output}, isArray: ${Array.isArray(output)}`,
+      );
+      console.log(
+        `[transformers-service] Output keys:`,
+        output ? Object.keys(output) : "null",
+      );
       console.log(`[transformers-service] Output:`, output);
 
       // Extract text from output
@@ -203,9 +224,11 @@ class TransformersService {
           text = output.chunks.map((chunk: any) => chunk.text || "").join(" ");
         }
       }
-      
+
       console.log(`[transformers-service] Extracted text: "${text}"`);
-      console.log(`[transformers-service] Text length: ${text.length} characters`);
+      console.log(
+        `[transformers-service] Text length: ${text.length} characters`,
+      );
 
       return {
         text: text.trim(),
