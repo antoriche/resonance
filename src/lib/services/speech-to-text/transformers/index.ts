@@ -184,7 +184,7 @@ class TransformersService {
       }
 
       logger.info({ transcribeOptions }, `Transcription options`);
-      
+
       // Calculate min/max without spread operator to avoid stack overflow on large arrays
       let min = audioData[0];
       let max = audioData[0];
@@ -192,7 +192,7 @@ class TransformersService {
         if (audioData[i] < min) min = audioData[i];
         if (audioData[i] > max) max = audioData[i];
       }
-      
+
       logger.info(
         `Audio data stats: length=${audioData.length}, min=${min.toFixed(3)}, max=${max.toFixed(3)}`,
       );
