@@ -1,12 +1,4 @@
-import { foreignKey } from "drizzle-orm/gel-core";
-import {
-  pgTable,
-  text,
-  integer,
-  timestamp,
-  vector,
-  PgTableWithColumns,
-} from "drizzle-orm/pg-core";
+import { pgTable, text, integer, timestamp, vector } from "drizzle-orm/pg-core";
 
 // ── PostgreSQL schema ────────────────────────────────────────────────
 
@@ -14,6 +6,15 @@ export const files = pgTable("files", {
   id: text("id").primaryKey(),
   filePath: text("file_path").notNull(),
   recordingTimestamp: timestamp("recording_timestamp").notNull(),
+});
+
+export const speakers = pgTable("speakers", {
+  id: text("id").primaryKey(),
+  name: text("name"),
+  centroid: vector("centroid", { dimensions: 256 }).notNull(),
+  segmentCount: integer("segment_count").notNull().default(1),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 export const transcriptions = pgTable("transcriptions", {
@@ -27,9 +28,13 @@ export const transcriptions = pgTable("transcriptions", {
   duration: integer("duration").notNull(),
   text: text("text").notNull(),
   embedding: vector("embedding", { dimensions: 256 }).notNull(),
+  speakerId: text("speaker_id").references(() => speakers.id, {
+    onDelete: "set null",
+  }),
 });
 
 // ── Export types ─────────────────────────────────────────────────────
 
 export type File = typeof files.$inferSelect;
+export type Speaker = typeof speakers.$inferSelect;
 export type Transcription = typeof transcriptions.$inferSelect;

@@ -9,6 +9,13 @@ import pino from "pino";
  */
 const baseLogger = pino({
   level: process.env.LOG_LEVEL || "info",
+  // Enable error serialization with stack traces
+  serializers: {
+    // Standard Pino error serializer for 'err' key
+    err: pino.stdSerializers.err,
+    // Also handle 'error' key (commonly used in this codebase)
+    error: pino.stdSerializers.err,
+  },
   ...(process.env.NODE_ENV === "development"
     ? {
         transport: {

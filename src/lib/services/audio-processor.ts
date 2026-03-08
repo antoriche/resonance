@@ -1,10 +1,16 @@
 import type { File } from "@/lib/db/schema";
-import { upsertTranscription, upsertFile } from "@/lib/db/operations";
+import {
+  upsertTranscription,
+  upsertFile,
+  recomputeSpeakerCentroid,
+} from "@/lib/db/operations";
+import { resolveSpeaker } from "@/lib/services/speaker-resolution";
 import { diarizeSpeaker } from "@/lib/services/speaker-diarization";
 import { speachToText } from "@/lib/services/speech-to-text";
 import { stat } from "fs/promises";
 import { parseFile } from "music-metadata";
 import { createLogger } from "@/lib/logger";
+import { Embedding } from "@/types/embedding";
 // ── Audio Processor Service ──────────────────────────────────────
 
 const logger = createLogger("audio-processor");
@@ -34,9 +40,13 @@ class AudioProcessor {
 
       await upsertFile(newFile);
 
+      const speakerIds = new Set<string>();
+
       await Promise.all(
         segments.map(async (segment) => {
           const chunk = await segment;
+          const speakerId = await resolveSpeaker(chunk.embedding);
+          speakerIds.add(speakerId);
           await upsertTranscription({
             id: `${fileId}-${chunk.timestamp}`,
             fileId,
@@ -44,11 +54,20 @@ class AudioProcessor {
             duration: chunk.duration,
             text: chunk.text,
             embedding: chunk.embedding,
+            speakerId,
           });
         }),
       );
 
-      logger.info({ fileId }, `Transcription completed`);
+      // Recompute centroids for all speakers that were assigned segments
+      await Promise.all(
+        [...speakerIds].map((sid) => recomputeSpeakerCentroid(sid)),
+      );
+
+      logger.info(
+        { fileId, speakerCount: speakerIds.size },
+        `Transcription completed`,
+      );
 
       return {
         fileId,
@@ -68,7 +87,7 @@ class AudioProcessor {
       Promise<{
         timestamp: number;
         duration: number;
-        embedding: number[];
+        embedding: Embedding;
         text: string;
       }>
     >

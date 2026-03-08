@@ -184,22 +184,24 @@ class TransformersService {
       }
 
       logger.info({ transcribeOptions }, `Transcription options`);
+      
+      // Calculate min/max without spread operator to avoid stack overflow on large arrays
+      let min = audioData[0];
+      let max = audioData[0];
+      for (let i = 1; i < audioData.length; i++) {
+        if (audioData[i] < min) min = audioData[i];
+        if (audioData[i] > max) max = audioData[i];
+      }
+      
       logger.info(
-        `Audio data stats: length=${audioData.length}, min=${Math.min(...audioData).toFixed(3)}, max=${Math.max(...audioData).toFixed(3)}`,
+        `Audio data stats: length=${audioData.length}, min=${min.toFixed(3)}, max=${max.toFixed(3)}`,
       );
 
       // Run transcription with raw audio data
-      const output: any = await this.transcriber(audioData, transcribeOptions);
+      const output = await this.transcriber(audioData, transcribeOptions);
 
       const duration = Date.now() - startTime;
       logger.info(`Transcription completed in ${duration}ms`);
-      logger.info(
-        `Output type: ${typeof output}, isArray: ${Array.isArray(output)}`,
-      );
-      logger.info(
-        { keys: output ? Object.keys(output) : "null" },
-        `Output keys`,
-      );
       logger.info({ output }, `Output`);
 
       // Extract text from output
@@ -213,11 +215,15 @@ class TransformersService {
         // Check for text property
         if ("text" in output) {
           text = output.text || "";
+        } else {
+          throw new Error(
+            `Unexpected output format: ${JSON.stringify(output)}`,
+          );
         }
         // Check for chunks with timestamps
-        else if ("chunks" in output && Array.isArray(output.chunks)) {
-          text = output.chunks.map((chunk: any) => chunk.text || "").join(" ");
-        }
+        // else if ("chunks" in output && Array.isArray(output.chunks)) {
+        //   text = output.chunks.map((chunk: any) => chunk.text || "").join(" ");
+        // }
       }
 
       logger.info(`Extracted text: "${text}"`);

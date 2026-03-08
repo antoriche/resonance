@@ -79,3 +79,29 @@ export function useInfiniteTranscriptions(
     initialPageParam: undefined as string | undefined,
   });
 }
+
+export function useNewerTranscriptions(
+  enablePolling: boolean,
+  latestTimestamp?: Date,
+) {
+  return useQuery({
+    queryKey: ["transcriptions", "newer", latestTimestamp?.toISOString()],
+    queryFn: async () => {
+      if (!latestTimestamp) return null;
+
+      // Query for transcriptions newer than the latest we have
+      // Add 1ms to avoid getting the same transcription again
+      const queryDate = new Date(latestTimestamp.getTime() + 1);
+
+      const response = await getTranscriptions_({
+        date: queryDate.toISOString(),
+        limit: 50, // Reasonable limit for polling
+      });
+
+      return response;
+    },
+    enabled: enablePolling && !!latestTimestamp,
+    refetchInterval: enablePolling ? 5000 : false, // Poll every 5 seconds when enabled
+    refetchIntervalInBackground: false, // Stop polling when tab is in background
+  });
+}

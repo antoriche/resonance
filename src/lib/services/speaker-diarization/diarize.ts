@@ -5,13 +5,14 @@ import { createWriteStream, unlinkSync } from "fs";
 import { tmpdir } from "os";
 import { randomBytes } from "crypto";
 import { createLogger } from "@/lib/logger";
+import { Embedding } from "@/types/embedding";
 
 const logger = createLogger("diarize");
 
 interface DiarizationSegment {
   offset: number;
   duration: number;
-  embedding: number[];
+  embedding: Embedding;
 }
 
 /**
@@ -210,7 +211,7 @@ async function processSegmentationChunk(
 
   // Parse output - shape is [batch, frames, classes]
   // For pyannote models, classes typically represent speaker activity
-  const dims = outputTensor.dims as number[];
+  const dims = outputTensor.dims;
   const numFrames = dims[1];
   const numClasses = dims[2];
   const data = outputTensor.data as Float32Array;

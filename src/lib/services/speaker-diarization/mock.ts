@@ -1,14 +1,15 @@
+import { Embedding } from "@/types/embedding";
+
 export async function diarizeSpeaker(filePath: string): Promise<
   Array<{
     speakerId: number;
     offset: number;
     duration: number;
-    embedding: number[];
+    embedding: Embedding;
   }>
 > {
-  // Generate mock 256-dimensional embedding (to match actual model output)
-  const mockEmbedding = Array.from({ length: 256 }, () => Math.random());
-  
+  const mockEmbedding = new Embedding(Array(256).fill(0));
+
   return [
     {
       speakerId: 1,

@@ -8,7 +8,7 @@ import { createLogger } from "@/lib/logger";
 
 // ── Configuration ────────────────────────────────────────────
 
-const logger = createLogger("file-watcher");────────
+const logger = createLogger("file-watcher");
 
 const FILE_WATCHER_ENABLED = process.env.FILE_WATCHER_ENABLED === "true";
 
@@ -22,9 +22,7 @@ class FileWatcher {
    */
   start() {
     if (!FILE_WATCHER_ENABLED) {
-      logger.info(
-        "Disabled (set FILE_WATCHER_ENABLED=true to enable)",
-      );
+      logger.info("Disabled (set FILE_WATCHER_ENABLED=true to enable)");
       return;
     }
 
@@ -99,10 +97,7 @@ class FileWatcher {
 
       logger.info({ filename }, `Processing initiated`);
     } catch (error) {
-      logger.error(
-        { filePath, error },
-        `Failed to process file`,
-      );
+      logger.error({ filePath, error }, `Failed to process file`);
     }
   }
 }

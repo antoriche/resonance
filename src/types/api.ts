@@ -26,6 +26,7 @@ export interface ErrorResponse {
 // but including recordingTimestamp from the files table for display purposes
 export type TranscriptionListItem = Omit<Transcription, "embedding"> & {
   recordingTimestamp: Date;
+  speakerName: string | null;
 };
 
 export type TranscriptionsPaginatedResponse =

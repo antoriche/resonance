@@ -1,4 +1,11 @@
-import React, { useMemo, useRef, useEffect, useLayoutEffect } from "react";
+import React, {
+  useMemo,
+  useRef,
+  useEffect,
+  useLayoutEffect,
+  useState,
+  useCallback,
+} from "react";
 import _ from "lodash";
 import VerticalText from "../UI/VerticalText";
 import dayjs from "dayjs";
@@ -19,17 +26,28 @@ type ChatPanelProps = {
   onLoadMore?: () => void;
   hasMore?: boolean;
   isLoadingMore?: boolean;
+  onScrollPositionChange?: (isAtBottom: boolean) => void;
 };
 const ChatPanel: React.FC<ChatPanelProps> = ({
   messages,
   onLoadMore,
   hasMore,
   isLoadingMore,
+  onScrollPositionChange,
 }) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const lastMessageCountRef = useRef(0);
   const savedScrollTopRef = useRef(0);
   const isLoadingRef = useRef(false);
+  const [isAtBottom, setIsAtBottom] = useState(true);
+
+  // Debounced callback for scroll position changes
+  const debouncedScrollPositionChange = useCallback(
+    _.debounce((isAtBottom: boolean) => {
+      onScrollPositionChange?.(isAtBottom);
+    }, 300),
+    [onScrollPositionChange],
+  );
 
   // Restore scroll position BEFORE the browser paints
   // With column-reverse, content position relative to the bottom doesn't change
@@ -78,6 +96,29 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
     container.addEventListener("scroll", handleScroll);
     return () => container.removeEventListener("scroll", handleScroll);
   }, [onLoadMore, hasMore, isLoadingMore]);
+
+  // Track scroll position for polling (at bottom = most recent messages with column-reverse)
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const checkScrollPosition = () => {
+      const { scrollTop } = container;
+      // With column-reverse, scrollTop ≈ 0 means at bottom (most recent)
+      const atBottom = Math.abs(scrollTop) < 100;
+
+      if (atBottom !== isAtBottom) {
+        setIsAtBottom(atBottom);
+        debouncedScrollPositionChange(atBottom);
+      }
+    };
+
+    container.addEventListener("scroll", checkScrollPosition);
+    // Check initial position
+    checkScrollPosition();
+
+    return () => container.removeEventListener("scroll", checkScrollPosition);
+  }, [isAtBottom, debouncedScrollPositionChange]);
 
   // If content doesn't overflow, scroll events won't fire — auto-load more
   useEffect(() => {
