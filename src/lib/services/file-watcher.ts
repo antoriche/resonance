@@ -2,7 +2,8 @@ import chokidar, { type FSWatcher } from "chokidar";
 import path from "node:path";
 import { getFileByFilename } from "@/lib/db/operations";
 import { audioProcessor } from "./audio-processor";
-import { UPLOAD_DIR, ALLOWED_EXTENSIONS } from "@/lib/audio/constants";
+import { ALLOWED_EXTENSIONS } from "@/lib/audio/constants";
+import { storageBasePath } from "./storage";
 import { createLogger } from "@/lib/logger";
 
 // ── Configuration ────────────────────────────────────────────
@@ -27,10 +28,17 @@ class FileWatcher {
       return;
     }
 
-    const allowedExtensions = Array.from(ALLOWED_EXTENSIONS);
-    const globPattern = `${UPLOAD_DIR}/**/*{${allowedExtensions.join(",")}}`;
+    if (!storageBasePath) {
+      logger.error(
+        "File watcher only works with FileStorage (local storage). Current storage is cloud-based.",
+      );
+      return;
+    }
 
-    logger.info({ uploadDir: UPLOAD_DIR }, `Starting watcher`);
+    const allowedExtensions = Array.from(ALLOWED_EXTENSIONS);
+    const globPattern = `${storageBasePath}/**/*{${allowedExtensions.join(",")}}`;
+
+    logger.info({ uploadDir: storageBasePath }, `Starting watcher`);
     logger.info(
       { extensions: allowedExtensions.join(", ") },
       `Watching extensions`,

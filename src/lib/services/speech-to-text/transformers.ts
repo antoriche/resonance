@@ -23,7 +23,6 @@ export async function speachToText(
 ): Promise<{
   text: string;
 }> {
-  const startTime = Date.now();
   logger.info(
     `Processing segment: ${filePath} (${options.offset}s - ${options.offset + options.duration}s)`,
   );

@@ -2,8 +2,9 @@ import { createWriteStream } from "node:fs";
 import { unlink, mkdir } from "node:fs/promises";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
+import path from "node:path";
 
-import { MAX_FILE_SIZE, UPLOAD_DIR } from "./constants";
+import { MAX_FILE_SIZE } from "./constants";
 
 class MaxSizeExceededError extends Error {
   constructor(limit: number) {
@@ -28,7 +29,8 @@ export async function streamToDisk(
   maxSize: number = MAX_FILE_SIZE,
 ): Promise<number> {
   // Ensure the upload directory exists
-  await mkdir(UPLOAD_DIR, { recursive: true });
+  const dir = path.dirname(destPath);
+  await mkdir(dir, { recursive: true });
 
   let bytesWritten = 0;
 

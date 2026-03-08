@@ -5,13 +5,16 @@ import { NextResponse } from "next/server";
 import {
   ALLOWED_MIME_TYPES,
   ALLOWED_EXTENSIONS,
-  UPLOAD_DIR,
   type UploadResult,
 } from "@/lib/audio/constants";
-import { streamToDisk, MaxSizeExceededError } from "@/lib/audio/stream-to-disk";
+import {
+  streamToBuffer,
+  MaxSizeExceededError,
+} from "@/lib/audio/stream-to-buffer";
 import { authenticate } from "@/lib/middleware/auth";
 import { audioProcessor } from "@/lib/services/audio-processor";
 import { createLogger } from "@/lib/logger";
+import storage from "@/lib/services/storage";
 
 const logger = createLogger("audio/upload");
 
@@ -35,15 +38,11 @@ function jsonError(message: string, status: number) {
 /**
  * Trigger audio processing (fire-and-forget)
  */
-async function triggerProcessing(
-  destPath: string,
-  id: string,
-  filename: string,
-) {
+async function triggerProcessing(destPath: string, id: string) {
   try {
     logger.info({ id }, `Triggered async processing`);
 
-    audioProcessor.syncFileData(destPath, { id, filename }).catch((err) => {
+    audioProcessor.syncFileData(destPath).catch((err) => {
       logger.error({ id, err }, `Background processing failed`);
     });
   } catch (error) {
@@ -100,22 +99,30 @@ async function handleRawStream(request: Request, contentType: string) {
 
   const id = randomUUID();
   const filename = `${id}${ext}`;
-  const destPath = path.join(UPLOAD_DIR, filename);
 
   try {
-    const size = await streamToDisk(request.body, destPath);
+    // Stream to buffer with size limit
+    const { buffer, bytesWritten } = await streamToBuffer(request.body);
+
+    // Save to storage
+    await storage.saveFile(filename, buffer);
 
     const result: UploadResult = {
       id,
       filename,
-      size,
+      size: bytesWritten,
       mimeType: mime,
       path: `/uploads/${filename}`,
       createdAt: new Date().toISOString(),
     };
 
-    // Trigger audio processing
-    await triggerProcessing(destPath, id, filename);
+    // Trigger audio processing (requires local file path)
+    const localPath = storage.getLocalPath(filename);
+    if (localPath) {
+      await triggerProcessing(localPath, id);
+    } else {
+      logger.warn({ id }, "Cloud storage detected, skipping local processing");
+    }
 
     return NextResponse.json(result, { status: 201 });
   } catch (error) {
@@ -164,23 +171,32 @@ async function handleMultipart(request: Request) {
 
   const id = randomUUID();
   const filename = `${id}${ext}`;
-  const destPath = path.join(UPLOAD_DIR, filename);
 
   try {
     const stream = file.stream() as unknown as ReadableStream<Uint8Array>;
-    const size = await streamToDisk(stream, destPath);
+
+    // Stream to buffer with size limit
+    const { buffer, bytesWritten } = await streamToBuffer(stream);
+
+    // Save to storage
+    await storage.saveFile(filename, buffer);
 
     const result: UploadResult = {
       id,
       filename,
-      size,
+      size: bytesWritten,
       mimeType: mime,
       path: `/uploads/${filename}`,
       createdAt: new Date().toISOString(),
     };
 
-    // Trigger audio processing
-    await triggerProcessing(destPath, id, filename);
+    // Trigger audio processing (requires local file path)
+    const localPath = storage.getLocalPath(filename);
+    if (localPath) {
+      await triggerProcessing(localPath, id);
+    } else {
+      logger.warn({ id }, "Cloud storage detected, skipping local processing");
+    }
 
     return NextResponse.json(result, { status: 201 });
   } catch (error) {

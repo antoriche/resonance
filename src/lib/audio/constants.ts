@@ -1,5 +1,3 @@
-import path from "node:path";
-
 // ── Allowed audio formats ────────────────────────────────────────────
 export const ALLOWED_MIME_TYPES: Record<string, string> = {
   "audio/mpeg": ".mp3",
@@ -23,9 +21,6 @@ export const ALLOWED_EXTENSIONS = new Set([
 // ── Upload constraints ───────────────────────────────────────────────
 /** Maximum file size in bytes (100 MB) */
 export const MAX_FILE_SIZE = 100 * 1024 * 1024;
-
-/** Directory where uploaded audio files are stored */
-export const UPLOAD_DIR = path.join(process.cwd(), "uploads");
 
 // ── Types ────────────────────────────────────────────────────────────
 export interface UploadResult {
