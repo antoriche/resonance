@@ -25,8 +25,9 @@ class TransformersService {
   private modelName: string;
   private isInitializing: boolean = false;
 
-  constructor(modelName: string = "Xenova/whisper-tiny") {
-    this.modelName = modelName;
+  constructor(modelName?: string) {
+    const defaultModel = process.env.WHISPER_MODEL || "base";
+    this.modelName = modelName || `Xenova/whisper-${defaultModel}`;
     console.log(
       `[transformers-service] Initialized with model: ${this.modelName}`,
     );
