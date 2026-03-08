@@ -36,9 +36,7 @@ export async function speachToText(
     options.duration,
   );
   const segmentExtractionTime = Date.now() - segmentStartTime;
-  logger.info(
-    `Segment extraction took ${segmentExtractionTime}ms`,
-  );
+  logger.info(`Segment extraction took ${segmentExtractionTime}ms`);
 
   try {
     // Transcribe the segment using Transformers

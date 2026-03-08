@@ -36,10 +36,7 @@ class WhisperService {
       ...defaultConfig,
       ...config,
     };
-    logger.info(
-      { model: this.config.modelName },
-      `Initialized with model`,
-    );
+    logger.info({ model: this.config.modelName }, `Initialized with model`);
   }
 
   /**
@@ -108,7 +105,10 @@ class WhisperService {
 
       // Extract text from output
       const text = typeof output === "string" ? output : "";
-      logger.info({ length: text.length }, `Text length: ${text.length} characters`);
+      logger.info(
+        { length: text.length },
+        `Text length: ${text.length} characters`,
+      );
 
       return {
         text: text.trim(),

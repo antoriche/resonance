@@ -252,7 +252,9 @@ async function processSegmentationChunk(
     `Max logit values by class`,
   );
   logger.info(
-    { values: maxValuesByClass.map((v) => (1 / (1 + Math.exp(-v))).toFixed(3)) },
+    {
+      values: maxValuesByClass.map((v) => (1 / (1 + Math.exp(-v))).toFixed(3)),
+    },
     `Max sigmoid values by class`,
   );
 
@@ -359,7 +361,10 @@ async function extractEmbeddings(
     }
 
     logger.info(
-      { segment: `${segment.start}-${segment.end}ms`, audioLength: chunk.length },
+      {
+        segment: `${segment.start}-${segment.end}ms`,
+        audioLength: chunk.length,
+      },
       `Processing embedding for segment`,
     );
 
@@ -585,7 +590,10 @@ function clusterSpeakers(
     embedding: Array.from(embeddings[idx]),
   }));
 
-  logger.info({ uniqueSpeakers: nextSpeakerId - 1 }, `Identified unique speakers`);
+  logger.info(
+    { uniqueSpeakers: nextSpeakerId - 1 },
+    `Identified unique speakers`,
+  );
 
   return diarizedSegments;
 }

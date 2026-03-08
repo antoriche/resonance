@@ -31,9 +31,7 @@ class TransformersService {
   constructor(modelName?: string) {
     const defaultModel = process.env.WHISPER_MODEL || "base";
     this.modelName = modelName || `Xenova/whisper-${defaultModel}`;
-    logger.info(
-      `Initialized with model: ${this.modelName}`,
-    );
+    logger.info(`Initialized with model: ${this.modelName}`);
   }
 
   /**
@@ -94,10 +92,7 @@ class TransformersService {
 
       // Check if WAV file is empty
       if (!samples || samples.length === 0) {
-        logger.warn(
-          { audioFilePath },
-          `Empty WAV file detected, skipping`,
-        );
+        logger.warn({ audioFilePath }, `Empty WAV file detected, skipping`);
         return null;
       }
 
@@ -188,10 +183,7 @@ class TransformersService {
         transcribeOptions.language = options.language;
       }
 
-      logger.info(
-        { transcribeOptions },
-        `Transcription options`,
-      );
+      logger.info({ transcribeOptions }, `Transcription options`);
       logger.info(
         `Audio data stats: length=${audioData.length}, min=${Math.min(...audioData).toFixed(3)}, max=${Math.max(...audioData).toFixed(3)}`,
       );
@@ -200,9 +192,7 @@ class TransformersService {
       const output: any = await this.transcriber(audioData, transcribeOptions);
 
       const duration = Date.now() - startTime;
-      logger.info(
-        `Transcription completed in ${duration}ms`,
-      );
+      logger.info(`Transcription completed in ${duration}ms`);
       logger.info(
         `Output type: ${typeof output}, isArray: ${Array.isArray(output)}`,
       );
@@ -231,9 +221,7 @@ class TransformersService {
       }
 
       logger.info(`Extracted text: "${text}"`);
-      logger.info(
-        `Text length: ${text.length} characters`,
-      );
+      logger.info(`Text length: ${text.length} characters`);
 
       return {
         text: text.trim(),

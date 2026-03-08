@@ -100,9 +100,7 @@ export async function extractAudioSegment(
               const fileStats = await stat(tempPath);
 
               if (fileStats.size >= minFileSize) {
-                logger.info(
-                  `File verified: ${fileStats.size} bytes`,
-                );
+                logger.info(`File verified: ${fileStats.size} bytes`);
                 resolve({
                   path: tempPath,
                   cleanup: async () => {
@@ -110,10 +108,7 @@ export async function extractAudioSegment(
                       await unlink(tempPath);
                       logger.info({ tempPath }, `Cleaned up`);
                     } catch (error) {
-                      logger.warn(
-                        { tempPath, error },
-                        `Failed to cleanup`,
-                      );
+                      logger.warn({ tempPath, error }, `Failed to cleanup`);
                     }
                   },
                 });
@@ -134,20 +129,14 @@ export async function extractAudioSegment(
           }
 
           // If we get here, file never became valid - log stderr for debugging
-          logger.error(
-            { stderrOutput },
-            "FFmpeg stderr output",
-          );
+          logger.error({ stderrOutput }, "FFmpeg stderr output");
           reject(
             new Error(
               `Extracted file at ${tempPath} is too small or empty after ${maxAttempts} attempts. Check FFmpeg stderr above.`,
             ),
           );
         } catch (validationError) {
-          logger.error(
-            { stderrOutput },
-            "FFmpeg stderr output",
-          );
+          logger.error({ stderrOutput }, "FFmpeg stderr output");
           reject(
             new Error(`Failed to validate extracted file: ${validationError}`),
           );
