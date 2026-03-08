@@ -1,7 +1,7 @@
 import { nodewhisper } from "nodejs-whisper";
 import { existsSync } from "fs";
 import { resolve } from "path";
-import { getWhisperConfig, mapModelName, type WhisperConfig } from "./config";
+import { getWhisperConfig, type WhisperConfig } from "./config";
 
 // ── Whisper Service ─────────────────────────────────────────────────
 
@@ -55,13 +55,6 @@ class WhisperService {
     console.log(`[whisper-service] Using model: ${this.config.modelName}`);
 
     try {
-      // Map model name to nodejs-whisper format
-      const mappedModelName = mapModelName(this.config.modelName);
-
-      console.log(
-        `[whisper-service] Mapped model name: ${this.config.modelName} -> ${mappedModelName}`,
-      );
-
       // Resolve model path to absolute if provided
       const resolvedModelPath = this.config.modelPath
         ? resolve(process.cwd(), this.config.modelPath)
@@ -77,9 +70,11 @@ class WhisperService {
 
       // Configure whisper options
       const whisperOptions: any = {
-        modelName: mappedModelName,
+        modelName: this.config.modelName,
         // Only auto-download if no explicit model path is provided
-        ...(!resolvedModelPath && { autoDownloadModelName: mappedModelName }),
+        ...(!resolvedModelPath && {
+          autoDownloadModelName: this.config.modelName,
+        }),
         verbose: false,
         removeWavFileAfterTranscription: false,
         withCuda: false,

@@ -10,12 +10,12 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/lib/db/migrate.ts",
     "db:studio": "drizzle-kit studio",
-    "watch:uploads": "FILE_WATCHER_ENABLED=true tsx scripts/watch-uploads.ts",
-    "postinstall": "bash scripts/build-whisper.sh"
+    "watch:uploads": "FILE_WATCHER_ENABLED=true tsx scripts/watch-uploads.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.90.21",
     "@types/fluent-ffmpeg": "^2.1.28",
+    "@xenova/transformers": "^2.17.2",
     "axios": "^1.13.6",
     "chokidar": "^5.0.0",
     "dayjs": "^1.11.19",
@@ -28,7 +28,8 @@
     "onnxruntime-node": "^1.24.3",
     "pg": "^8.20.0",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "wavefile": "^11.0.0"
   },
   "devDependencies": {
     "@svgr/webpack": "^8.1.0",

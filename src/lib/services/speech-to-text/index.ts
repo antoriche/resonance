@@ -1,4 +1,5 @@
 // ── Speech-to-Text Service ──────────────────────────────────────────
 
-// Simple switch: change "./whisper" to "./mock" to use mock implementation
-export { speachToText } from "./whisper";
+// Simple switch: change between "./transformers", "./whisper", or "./mock"
+// Using transformers.js (Xenova) for cross-platform compatibility
+export { speachToText } from "./transformers";
