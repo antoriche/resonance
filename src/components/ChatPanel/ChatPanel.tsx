@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useRef, useEffect, useLayoutEffect } from "react";
 import _ from "lodash";
 import VerticalText from "../UI/VerticalText";
 import dayjs from "dayjs";
@@ -16,8 +16,78 @@ type ChatPanelProps = {
     };
     text: string;
   }>;
+  onLoadMore?: () => void;
+  hasMore?: boolean;
+  isLoadingMore?: boolean;
 };
-const ChatPanel: React.FC<ChatPanelProps> = ({ messages }) => {
+const ChatPanel: React.FC<ChatPanelProps> = ({
+  messages,
+  onLoadMore,
+  hasMore,
+  isLoadingMore,
+}) => {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const lastMessageCountRef = useRef(0);
+  const savedScrollTopRef = useRef(0);
+  const isLoadingRef = useRef(false);
+
+  // Restore scroll position BEFORE the browser paints
+  // With column-reverse, content position relative to the bottom doesn't change
+  // when older messages are added at the visual top — so restoring the same
+  // scrollTop value keeps the viewport on the same messages.
+  useLayoutEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    if (
+      messages.length > lastMessageCountRef.current &&
+      lastMessageCountRef.current > 0 &&
+      isLoadingRef.current
+    ) {
+      container.scrollTop = savedScrollTopRef.current;
+      isLoadingRef.current = false;
+    }
+
+    lastMessageCountRef.current = messages.length;
+  }, [messages]);
+
+  // Handle scroll to load more when reaching the top (older messages with column-reverse)
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container || !onLoadMore || !hasMore) return;
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = container;
+
+      const maxScroll = scrollHeight - clientHeight;
+      const currentScroll = Math.abs(scrollTop);
+
+      // Load more when within 100px of the visual top (oldest messages)
+      if (
+        maxScroll - currentScroll < 100 &&
+        !isLoadingMore &&
+        !isLoadingRef.current
+      ) {
+        // Save the exact scrollTop right before triggering load
+        savedScrollTopRef.current = scrollTop;
+        isLoadingRef.current = true;
+        onLoadMore();
+      }
+    };
+
+    container.addEventListener("scroll", handleScroll);
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, [onLoadMore, hasMore, isLoadingMore]);
+
+  // If content doesn't overflow, scroll events won't fire — auto-load more
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container || !onLoadMore || !hasMore || isLoadingMore || isLoadingRef.current) return;
+
+    if (container.scrollHeight <= container.clientHeight) {
+      onLoadMore();
+    }
+  }, [messages, onLoadMore, hasMore, isLoadingMore]);
   const messagesPerDay = useMemo(
     () =>
       _(messages)
@@ -58,12 +128,14 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ messages }) => {
     >
       <h3>Chat Panel</h3>
       <div
+        ref={scrollContainerRef}
         style={{
           flex: 1,
           display: "flex",
-          flexDirection: "column",
+          flexDirection: "column-reverse",
           gap: 16,
           overflowY: "auto",
+          overflowAnchor: "none",
         }}
       >
         {messagesPerDay.map(({ date, messages }) => (
@@ -136,6 +208,18 @@ const ChatPanel: React.FC<ChatPanelProps> = ({ messages }) => {
             </div>
           </div>
         ))}
+        {isLoadingMore && (
+          <div
+            style={{
+              padding: "1rem",
+              textAlign: "center",
+              color: "#B3B3B3",
+              fontSize: 14,
+            }}
+          >
+            Loading more...
+          </div>
+        )}
       </div>
     </div>
   );

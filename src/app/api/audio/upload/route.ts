@@ -18,8 +18,6 @@ import storage from "@/lib/services/storage";
 
 const logger = createLogger("audio/upload");
 
-export const runtime = "nodejs";
-
 // ── Helpers ──────────────────────────────────────────────────────────
 
 function extensionForMime(mime: string): string | null {
