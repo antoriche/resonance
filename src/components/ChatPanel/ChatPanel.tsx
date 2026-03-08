@@ -82,7 +82,14 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
   // If content doesn't overflow, scroll events won't fire — auto-load more
   useEffect(() => {
     const container = scrollContainerRef.current;
-    if (!container || !onLoadMore || !hasMore || isLoadingMore || isLoadingRef.current) return;
+    if (
+      !container ||
+      !onLoadMore ||
+      !hasMore ||
+      isLoadingMore ||
+      isLoadingRef.current
+    )
+      return;
 
     if (container.scrollHeight <= container.clientHeight) {
       onLoadMore();
