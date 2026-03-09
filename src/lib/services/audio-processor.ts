@@ -43,8 +43,7 @@ class AudioProcessor {
       const speakerIds = new Set<string>();
 
       await Promise.all(
-        segments.map(async (segment) => {
-          const chunk = await segment;
+        segments.map(async (chunk) => {
           const speakerId = await resolveSpeaker(chunk.embedding);
           speakerIds.add(speakerId);
           await upsertTranscription({
@@ -83,14 +82,12 @@ class AudioProcessor {
    * TODO: Replace with actual transcription service (Whisper API, local Whisper, etc.)
    */
   private async processFile(filePath: string): Promise<
-    Array<
-      Promise<{
-        timestamp: number;
-        duration: number;
-        embedding: Embedding;
-        text: string;
-      }>
-    >
+    Array<{
+      timestamp: number;
+      duration: number;
+      embedding: Embedding;
+      text: string;
+    }>
   > {
     // retreve audio regisration timestamp from file metadata
     const baseTimestamp = Date.now();
@@ -118,17 +115,24 @@ class AudioProcessor {
       `Diarization completed in ${diarizationDuration.toFixed(2)}s, ${segments.length} segments found`,
     );
 
-    return segments.map(async (segment) => {
-      return speachToText(filePath, {
-        offset: segment.offset,
-        duration: segment.duration,
-      }).then((res) => ({
-        timestamp: segment.offset,
-        duration: segment.duration,
-        text: res.text,
-        embedding: segment.embedding,
-      }));
-    });
+    const transcribedSegments = await Promise.all(
+      segments.map(async (segment) => {
+        return speachToText(filePath, {
+          offset: segment.offset,
+          duration: segment.duration,
+        }).then((res) => ({
+          timestamp: segment.offset,
+          duration: segment.duration,
+          text: res.text,
+          embedding: segment.embedding,
+        }));
+      }),
+    );
+
+    // Filter out segments with empty text
+    return transcribedSegments.filter(
+      (chunk) => chunk.text && chunk.text.trim() !== "",
+    );
   }
 
   /**
