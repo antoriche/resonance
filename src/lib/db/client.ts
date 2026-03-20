@@ -1,7 +1,7 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import path from "path";
-import { transcriptions, files, speakers, computed_speakers } from "./schema";
+import { transcriptions, files, computed_speakers } from "./schema";
 import { createLogger } from "@/lib/logger";
 
 const logger = createLogger("db");
@@ -18,7 +18,6 @@ export function createPgClient(databaseUrl: string) {
     db,
     files,
     transcriptions,
-    speakers,
     computed_speakers,
   };
 }

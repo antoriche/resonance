@@ -1,9 +1,8 @@
-import { eq, desc, asc, and, lt, gt, or, gte, lte, sql } from "drizzle-orm";
+import { eq, desc, asc, and, lt, gt, or, gte, lte } from "drizzle-orm";
 import { db, client } from "./client";
-import type { Transcription, File, Speaker } from "./schema";
-import { Embedding } from "@/types/embedding";
+import type { Transcription, File } from "./schema";
 
-const { transcriptions, files, speakers, computed_speakers } = client;
+const { transcriptions, files, computed_speakers } = client;
 
 // ── Database Operations ──────────────────────────────────────────────
 
@@ -52,65 +51,6 @@ export async function getFileByFilename(
 
 export async function getAllTranscriptions(): Promise<Transcription[]> {
   return await db.select().from(transcriptions);
-}
-
-// ── Speaker Operations ───────────────────────────────────────────────
-
-export async function findNearestSpeaker(
-  embedding: Embedding,
-): Promise<{ id: string; distance: number } | null> {
-  const result = await db.execute(
-    sql`SELECT id, centroid <=> ${JSON.stringify(embedding)}::vector AS distance
-        FROM speakers
-        ORDER BY distance
-        LIMIT 1`,
-  );
-
-  const row = result.rows[0];
-  if (!row) return null;
-
-  return { id: row.id as string, distance: Number(row.distance) };
-}
-
-export async function createSpeaker(
-  id: string,
-  centroid: Embedding,
-): Promise<void> {
-  await db.insert(speakers).values({
-    id,
-    centroid,
-    segmentCount: 1,
-  });
-}
-
-export async function recomputeSpeakerCentroid(
-  speakerId: string,
-): Promise<void> {
-  await db.execute(
-    sql`UPDATE speakers
-        SET centroid = (
-              SELECT AVG(embedding)
-              FROM transcriptions
-              WHERE speaker_id = ${speakerId}
-            ),
-            segment_count = (
-              SELECT COUNT(*)
-              FROM transcriptions
-              WHERE speaker_id = ${speakerId}
-            ),
-            updated_at = NOW()
-        WHERE id = ${speakerId}`,
-  );
-}
-
-export async function updateSpeakerName(
-  speakerId: string,
-  name: string,
-): Promise<void> {
-  await db
-    .update(speakers)
-    .set({ name, updatedAt: new Date() })
-    .where(eq(speakers.id, speakerId));
 }
 
 // ── Pagination Utilities ─────────────────────────────────────────────
@@ -203,7 +143,6 @@ export async function getTranscriptionsPaginated(
         text: transcriptions.text,
         speakerId: computed_speakers.speakerId,
       },
-      speakerName: speakers.name,
       recordingTimestamp: files.recordingTimestamp,
     })
     .from(transcriptions)
@@ -212,7 +151,6 @@ export async function getTranscriptionsPaginated(
       computed_speakers,
       eq(transcriptions.id, computed_speakers.transcriptionId),
     )
-    .leftJoin(speakers, eq(computed_speakers.speakerId, speakers.id))
     .$dynamic();
 
   // Apply cursor-based filtering
@@ -297,7 +235,7 @@ export async function getTranscriptionsPaginated(
   const items = results.map((r) => ({
     ...r.transcription,
     recordingTimestamp: r.recordingTimestamp,
-    speakerName: r.speakerName,
+    speakerName: null as string | null,
   }));
 
   // If we got items in "prev" direction, reverse them back to normal order
