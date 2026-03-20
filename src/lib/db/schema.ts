@@ -1,4 +1,13 @@
-import { pgTable, text, integer, timestamp, vector } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import {
+  pgTable,
+  text,
+  integer,
+  timestamp,
+  vector,
+  pgView,
+} from "drizzle-orm/pg-core";
+import { computedSpeakersSQL } from "./sql/dbscan";
 
 // ── PostgreSQL schema ────────────────────────────────────────────────
 
@@ -32,6 +41,11 @@ export const transcriptions = pgTable("transcriptions", {
     onDelete: "set null",
   }),
 });
+
+export const computed_speakers = pgView("computed_speakers", {
+  transcriptionId: text("transcription_id"),
+  speakerId: text("speaker_id"),
+}).as(sql.raw(computedSpeakersSQL().text));
 
 // ── Export types ─────────────────────────────────────────────────────
 

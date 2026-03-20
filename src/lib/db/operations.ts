@@ -3,7 +3,7 @@ import { db, client } from "./client";
 import type { Transcription, File, Speaker } from "./schema";
 import { Embedding } from "@/types/embedding";
 
-const { transcriptions, files, speakers } = client;
+const { transcriptions, files, speakers, computed_speakers } = client;
 
 // ── Database Operations ──────────────────────────────────────────────
 
@@ -201,14 +201,15 @@ export async function getTranscriptionsPaginated(
         offset: transcriptions.offset,
         duration: transcriptions.duration,
         text: transcriptions.text,
-        speakerId: transcriptions.speakerId,
+        speakerId: computed_speakers.speakerId,
       },
       speakerName: speakers.name,
       recordingTimestamp: files.recordingTimestamp,
     })
     .from(transcriptions)
     .innerJoin(files, eq(transcriptions.fileId, files.id))
-    .leftJoin(speakers, eq(transcriptions.speakerId, speakers.id))
+    .leftJoin(computed_speakers, eq(transcriptions.id, computed_speakers.transcriptionId))
+    .leftJoin(speakers, eq(computed_speakers.speakerId, speakers.id))
     .$dynamic();
 
   // Apply cursor-based filtering

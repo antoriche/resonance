@@ -10,7 +10,7 @@ const logger = createLogger("speaker-resolution");
  * to an existing global speaker. pgvector's `<=>` returns cosine
  * *distance* (0 = identical, 2 = opposite), so similarity = 1 - distance.
  */
-export const SPEAKER_SIMILARITY_THRESHOLD = 0.75;
+export const SPEAKER_SIMILARITY_THRESHOLD = 0.7;
 
 /**
  * Find or create a speaker that matches the given embedding.
@@ -21,6 +21,11 @@ export const SPEAKER_SIMILARITY_THRESHOLD = 0.75;
  */
 export async function resolveSpeaker(embedding: Embedding): Promise<string> {
   const nearest = await findNearestSpeaker(embedding);
+
+  logger.debug(
+    { embedding, nearest },
+    "Resolving speaker for segment embedding",
+  );
 
   if (nearest) {
     const similarity = 1 - nearest.distance;
