@@ -208,7 +208,10 @@ export async function getTranscriptionsPaginated(
     })
     .from(transcriptions)
     .innerJoin(files, eq(transcriptions.fileId, files.id))
-    .leftJoin(computed_speakers, eq(transcriptions.id, computed_speakers.transcriptionId))
+    .leftJoin(
+      computed_speakers,
+      eq(transcriptions.id, computed_speakers.transcriptionId),
+    )
     .leftJoin(speakers, eq(computed_speakers.speakerId, speakers.id))
     .$dynamic();
 
