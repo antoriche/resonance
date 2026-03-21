@@ -99,7 +99,9 @@
     padding: 0.5rem;
     gap: 0.5rem;
     /* leave room for fixed ControlBar (~56px) + footer nav (~60px) */
-    padding-bottom: calc(0.5rem + 56px + 60px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(
+      0.5rem + 56px + 60px + env(safe-area-inset-bottom, 0px)
+    );
   }
 
   .panels {

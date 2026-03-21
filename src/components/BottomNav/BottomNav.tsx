@@ -23,9 +23,33 @@ const TranscriptionsIcon = () => (
       strokeWidth="1.8"
       strokeLinejoin="round"
     />
-    <line x1="7" y1="8" x2="17" y2="8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    <line x1="7" y1="12" x2="17" y2="12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    <line x1="7" y1="16" x2="13" y2="16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    <line
+      x1="7"
+      y1="8"
+      x2="17"
+      y2="8"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+    />
+    <line
+      x1="7"
+      y1="12"
+      x2="17"
+      y2="12"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+    />
+    <line
+      x1="7"
+      y1="16"
+      x2="13"
+      y2="16"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+    />
   </svg>
 );
 
@@ -112,12 +136,18 @@ const SettingsIcon = () => (
   </svg>
 );
 
-const TABS: { id: Tab; label: string; icon: React.FC; mobileOnly?: boolean }[] = [
-  { id: "transcriptions", label: "Notes", icon: TranscriptionsIcon, mobileOnly: true },
-  { id: "ai", label: "AI", icon: AIIcon },
-  { id: "record", label: "Record", icon: RecordIcon },
-  { id: "settings", label: "Settings", icon: SettingsIcon },
-];
+const TABS: { id: Tab; label: string; icon: React.FC; mobileOnly?: boolean }[] =
+  [
+    {
+      id: "transcriptions",
+      label: "Notes",
+      icon: TranscriptionsIcon,
+      mobileOnly: true,
+    },
+    { id: "ai", label: "AI", icon: AIIcon },
+    { id: "record", label: "Record", icon: RecordIcon },
+    { id: "settings", label: "Settings", icon: SettingsIcon },
+  ];
 
 export default function BottomNav({ activeTab, onChange }: BottomNavProps) {
   return (
