@@ -18,6 +18,23 @@ export const ALLOWED_EXTENSIONS = new Set([
   ".webm",
 ]);
 
+// ── Recording constants ──────────────────────────────────────────────
+/** Duration of each recording chunk in milliseconds (30 seconds) */
+export const CHUNK_DURATION_MS = 30_000;
+
+/** Preferred MIME type for recording (WebM Opus) */
+export const RECORDING_MIME_TYPE = "audio/webm;codecs=opus";
+
+/** Fallback MIME types if preferred is not supported */
+export const RECORDING_MIME_FALLBACKS = [
+  "audio/webm",
+  "audio/ogg;codecs=opus",
+  "audio/mp4",
+];
+
+/** Number of FFT bins for waveform visualization */
+export const FFT_SIZE = 128;
+
 // ── Upload constraints ───────────────────────────────────────────────
 /** Maximum file size in bytes (100 MB) */
 export const MAX_FILE_SIZE = 100 * 1024 * 1024;
