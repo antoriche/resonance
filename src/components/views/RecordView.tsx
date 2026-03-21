@@ -30,7 +30,9 @@ export default function RecordView() {
     <div className={viewStyles.viewContainer}>
       <div className={`${viewStyles.viewContent} ${styles.container}`}>
         {/* Status label */}
-        <span className={`${styles.statusLabel} ${isActive ? styles.active : ""}`}>
+        <span
+          className={`${styles.statusLabel} ${isActive ? styles.active : ""}`}
+        >
           {isRecording ? "Recording" : isPaused ? "Paused" : "Tap to record"}
         </span>
 
@@ -90,7 +92,7 @@ function Waveform({
   // When idle or no data, show flat placeholder bars
   const bars = new Array(WAVEFORM_BARS).fill(0).map((_, i) => {
     // Map frequency data to bar height (3–80 px)
-    const value = data ? data[i % data.length] ?? 0 : 0;
+    const value = data ? (data[i % data.length] ?? 0) : 0;
     const height = data ? Math.max(3, (value / 255) * 80) : 3;
     return height;
   });

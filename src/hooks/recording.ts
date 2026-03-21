@@ -11,8 +11,7 @@ import { useRecordingStore } from "@/lib/stores/recording";
 // ── Selector hooks ───────────────────────────────────────────────────
 
 /** Current recording status */
-export const useRecordingStatus = () =>
-  useRecordingStore((s) => s.status);
+export const useRecordingStatus = () => useRecordingStore((s) => s.status);
 
 /** Elapsed recording time in seconds */
 export const useRecordingElapsedTime = () =>
@@ -23,8 +22,7 @@ export const useRecordingChunkIndex = () =>
   useRecordingStore((s) => s.chunkIndex);
 
 /** Error message (null when no error) */
-export const useRecordingError = () =>
-  useRecordingStore((s) => s.error);
+export const useRecordingError = () => useRecordingStore((s) => s.error);
 
 // ── Action hooks ─────────────────────────────────────────────────────
 
