@@ -5,7 +5,6 @@ import { Storage } from "./Storage";
 
 const { VERCEL_BLOB_TOKEN } = process.env;
 
-
 function createStorage(storageUri: string): Storage {
   // S3 format: s3://bucket/prefix or s3://bucket
   if (storageUri.startsWith("s3://")) {
@@ -68,7 +67,9 @@ function getStorageInstance(): Storage {
 
 const storageInstance = new Proxy({} as Storage, {
   get(_target, prop) {
-    return (getStorageInstance() as unknown as Record<string | symbol, unknown>)[prop];
+    return (
+      getStorageInstance() as unknown as Record<string | symbol, unknown>
+    )[prop];
   },
 });
 

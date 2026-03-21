@@ -95,11 +95,10 @@ export const client = new Proxy({} as ReturnType<typeof createPgClient>, {
   },
 });
 
-export const db = new Proxy(
-  {} as ReturnType<typeof createPgClient>["db"],
-  {
-    get(_target, prop) {
-      return (getClient().db as unknown as Record<string | symbol, unknown>)[prop];
-    },
+export const db = new Proxy({} as ReturnType<typeof createPgClient>["db"], {
+  get(_target, prop) {
+    return (getClient().db as unknown as Record<string | symbol, unknown>)[
+      prop
+    ];
   },
-);
+});
