@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getTranscriptionsPaginated } from "@/lib/db/operations";
 import { createLogger } from "@/lib/logger";
 
+export const dynamic = "force-dynamic";
+
 const logger = createLogger("API");
 
 export async function GET(request: Request) {

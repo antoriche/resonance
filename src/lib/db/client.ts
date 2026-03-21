@@ -73,13 +73,33 @@ async function setupLocalDatabase() {
   return embeddedUrl;
 }
 
-const isDevelopment = process.env.NODE_ENV === "development";
-const databaseUrl = process.env.DATABASE_URL;
-// ?? (isDevelopment ? await setupLocalDatabase() : undefined);
+// Lazily initialised so importing this module at build time (when DATABASE_URL
+// is not available) does not throw.  The error is deferred to the first
+// actual database call at request time.
+let _client: ReturnType<typeof createPgClient> | null = null;
 
-if (!databaseUrl) {
-  throw new Error("DATABASE_URL environment variable was not set.");
+function getClient(): ReturnType<typeof createPgClient> {
+  if (!_client) {
+    const url = process.env.DATABASE_URL;
+    if (!url) {
+      throw new Error("DATABASE_URL environment variable was not set.");
+    }
+    _client = createPgClient(url);
+  }
+  return _client;
 }
 
-export const client = createPgClient(databaseUrl);
-export const db = client.db;
+export const client = new Proxy({} as ReturnType<typeof createPgClient>, {
+  get(_target, prop) {
+    return (getClient() as unknown as Record<string | symbol, unknown>)[prop];
+  },
+});
+
+export const db = new Proxy(
+  {} as ReturnType<typeof createPgClient>["db"],
+  {
+    get(_target, prop) {
+      return (getClient().db as unknown as Record<string | symbol, unknown>)[prop];
+    },
+  },
+);

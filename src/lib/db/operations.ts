@@ -1,8 +1,7 @@
 import { eq, desc, asc, and, lt, gt, or, gte, lte } from "drizzle-orm";
-import { db, client } from "./client";
+import { db } from "./client";
+import { transcriptions, files, computed_speakers } from "./schema";
 import type { Transcription, File } from "./schema";
-
-const { transcriptions, files, computed_speakers } = client;
 
 // ── Database Operations ──────────────────────────────────────────────
 

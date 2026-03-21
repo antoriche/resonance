@@ -3,14 +3,8 @@ import { S3Storage } from "./S3Storage";
 import { VercelStorage } from "./VercelStorage";
 import { Storage } from "./Storage";
 
-const { STORAGE, VERCEL_BLOB_TOKEN } = process.env;
+const { VERCEL_BLOB_TOKEN } = process.env;
 
-if (!STORAGE) {
-  throw new Error("STORAGE environment variable is not defined");
-}
-
-let storageInstance: Storage;
-let storageBasePath: string | null = null;
 
 function createStorage(storageUri: string): Storage {
   // S3 format: s3://bucket/prefix or s3://bucket
@@ -58,7 +52,25 @@ function createStorage(storageUri: string): Storage {
   return new FileStorage(storageUri);
 }
 
-storageInstance = createStorage(STORAGE);
+let _storageInstance: Storage | null = null;
+let storageBasePath: string | null = null;
+
+function getStorageInstance(): Storage {
+  if (!_storageInstance) {
+    const storage = process.env.STORAGE;
+    if (!storage) {
+      throw new Error("STORAGE environment variable is not defined");
+    }
+    _storageInstance = createStorage(storage);
+  }
+  return _storageInstance;
+}
+
+const storageInstance = new Proxy({} as Storage, {
+  get(_target, prop) {
+    return (getStorageInstance() as unknown as Record<string | symbol, unknown>)[prop];
+  },
+});
 
 export default storageInstance;
 export { storageBasePath };

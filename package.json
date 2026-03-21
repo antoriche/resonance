@@ -6,12 +6,15 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "postinstall": "cap sync",
     "lint": "eslint",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/lib/db/migrate.ts",
     "db:studio": "drizzle-kit studio",
     "watch:uploads": "FILE_WATCHER_ENABLED=true tsx scripts/watch-uploads.ts",
-    "test": "jest"
+    "test": "jest",
+    "ios": "cap open ios",
+    "android": "cap open android"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1004.0",

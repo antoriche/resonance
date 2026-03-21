@@ -1,4 +1,4 @@
-import * as ort from "onnxruntime-node";
+import type * as OrtType from "onnxruntime-node";
 import { join } from "path";
 import Ffmpeg, * as ffmpeg from "fluent-ffmpeg";
 import { createWriteStream, unlinkSync } from "fs";
@@ -6,6 +6,14 @@ import { tmpdir } from "os";
 import { randomBytes } from "crypto";
 import { createLogger } from "@/lib/logger";
 import { Embedding } from "@/types/embedding";
+
+// Lazily loaded so the native binary is not required at module evaluation
+// time (which would break Next.js builds when the binary is missing).
+let _ort: typeof OrtType | undefined;
+async function getOrt(): Promise<typeof OrtType> {
+  if (!_ort) _ort = await import("onnxruntime-node");
+  return _ort;
+}
 
 const logger = createLogger("diarize");
 
@@ -37,6 +45,7 @@ export async function diarizeSpeaker(
 
     logger.info({ modelDir }, `Loading models`);
 
+    const ort = await getOrt();
     const segmentationSession = await ort.InferenceSession.create(
       segmentationModelPath,
     );
@@ -144,7 +153,7 @@ async function processAudioFile(filePath: string): Promise<Float32Array> {
  */
 async function performSegmentation(
   audioData: Float32Array,
-  session: ort.InferenceSession,
+  session: OrtType.InferenceSession,
 ): Promise<Array<{ start: number; end: number }>> {
   const segments: Array<{ start: number; end: number }> = [];
 
@@ -184,7 +193,7 @@ async function performSegmentation(
  */
 async function processSegmentationChunk(
   audioChunk: Float32Array,
-  session: ort.InferenceSession,
+  session: OrtType.InferenceSession,
   timeOffsetMs: number,
 ): Promise<Array<{ start: number; end: number }>> {
   const segments: Array<{ start: number; end: number }> = [];
@@ -195,7 +204,8 @@ async function processSegmentationChunk(
   logger.info({ samples: audioChunk.length }, `Segmentation chunk`);
 
   // Try shape [batch, channels, samples]
-  const inputTensor = new ort.Tensor("float32", audioChunk, [
+  const { Tensor } = await getOrt();
+  const inputTensor = new Tensor("float32", audioChunk, [
     1,
     1,
     audioChunk.length,
@@ -336,7 +346,7 @@ function mergeSegments(
 async function extractEmbeddings(
   audioData: Float32Array,
   segments: Array<{ start: number; end: number }>,
-  session: ort.InferenceSession,
+  session: OrtType.InferenceSession,
 ): Promise<Float32Array[]> {
   const embeddings: Float32Array[] = [];
   const sampleRate = 16000;
@@ -379,7 +389,8 @@ async function extractEmbeddings(
     // Prepare input tensor - shape should be [batch, time_frames, 80]
     const inputName = session.inputNames[0];
     const numFrames = melSpec.length / 80;
-    const inputTensor = new ort.Tensor("float32", melSpec, [1, numFrames, 80]);
+    const { Tensor } = await getOrt();
+    const inputTensor = new Tensor("float32", melSpec, [1, numFrames, 80]);
 
     logger.info(
       { shape: `[1, ${numFrames}, 80]` },
