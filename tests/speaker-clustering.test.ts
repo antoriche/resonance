@@ -212,6 +212,9 @@ describe("Speaker clustering (computed_speakers SQL via alasql)", () => {
     "Enregistrement 4": 1,
     "Enregistrement 5": 1,
     "Enregistrement 6": 1,
+    "Enregistrement 7": 1,
+    "Enregistrement 8": 1,
+    "Enregistrement 9": 1,
   };
 
   it.each(Object.entries(expected))(
@@ -223,4 +226,29 @@ describe("Speaker clustering (computed_speakers SQL via alasql)", () => {
       expect(count).toBe(expectedSpeakers);
     },
   );
+
+  it("Enregistrement 6, 7 and 8 should be different speakers", () => {
+    const speakerOf = (file: string) => {
+      const ids = fileMap.get(file)!;
+      // Return the majority / representative speaker for the file
+      const counts = new Map<string | null, number>();
+      for (const id of ids) {
+        const s = results.get(id) ?? null;
+        counts.set(s, (counts.get(s) ?? 0) + 1);
+      }
+      return [...counts.entries()].sort((a, b) => b[1] - a[1])[0][0];
+    };
+
+    const s6 = speakerOf("Enregistrement 6");
+    const s7 = speakerOf("Enregistrement 7");
+    const s8 = speakerOf("Enregistrement 8");
+
+    console.log(`  Enregistrement 6 speaker: ${s6}`);
+    console.log(`  Enregistrement 7 speaker: ${s7}`);
+    console.log(`  Enregistrement 8 speaker: ${s8}`);
+
+    expect(s6).not.toBe(s7);
+    expect(s6).not.toBe(s8);
+    expect(s7).not.toBe(s8);
+  });
 });
