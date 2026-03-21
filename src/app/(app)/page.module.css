@@ -1,0 +1,19 @@
+/* Responsive toggles for the home page */
+
+.mobileOnly {
+  display: none;
+}
+
+.desktopOnly {
+  display: contents;
+}
+
+@media (max-width: 768px) {
+  .mobileOnly {
+    display: contents;
+  }
+
+  .desktopOnly {
+    display: none;
+  }
+}

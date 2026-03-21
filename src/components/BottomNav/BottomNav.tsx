@@ -1,13 +1,10 @@
 "use client";
 
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import styles from "./BottomNav.module.css";
 
 export type Tab = "transcriptions" | "ai" | "record" | "settings";
-
-interface BottomNavProps {
-  activeTab: Tab;
-  onChange: (tab: Tab) => void;
-}
 
 const TranscriptionsIcon = () => (
   <svg
@@ -136,25 +133,43 @@ const SettingsIcon = () => (
   </svg>
 );
 
-const TABS: { id: Tab; label: string; icon: React.FC; mobileOnly?: boolean }[] =
-  [
-    {
-      id: "transcriptions",
-      label: "Notes",
-      icon: TranscriptionsIcon,
-      mobileOnly: true,
-    },
-    { id: "ai", label: "AI", icon: AIIcon },
-    { id: "record", label: "Record", icon: RecordIcon },
-    { id: "settings", label: "Settings", icon: SettingsIcon },
-  ];
+const TABS: {
+  id: Tab;
+  label: string;
+  icon: React.FC;
+  href: string;
+  mobileOnly?: boolean;
+}[] = [
+  {
+    id: "transcriptions",
+    label: "Notes",
+    icon: TranscriptionsIcon,
+    href: "/",
+    mobileOnly: true,
+  },
+  { id: "ai", label: "AI", icon: AIIcon, href: "/ai" },
+  { id: "record", label: "Record", icon: RecordIcon, href: "/record" },
+  { id: "settings", label: "Settings", icon: SettingsIcon, href: "/settings" },
+];
 
-export default function BottomNav({ activeTab, onChange }: BottomNavProps) {
+/** Map pathname → active tab id */
+function pathnameToTab(pathname: string): Tab {
+  if (pathname.startsWith("/ai")) return "ai";
+  if (pathname.startsWith("/record")) return "record";
+  if (pathname.startsWith("/settings")) return "settings";
+  return "transcriptions";
+}
+
+export default function BottomNav() {
+  const pathname = usePathname();
+  const activeTab = pathnameToTab(pathname);
+
   return (
     <nav className={styles.nav}>
-      {TABS.map(({ id, label, icon: Icon, mobileOnly }) => (
-        <button
+      {TABS.map(({ id, label, icon: Icon, href, mobileOnly }) => (
+        <Link
           key={id}
+          href={href}
           className={[
             styles.tab,
             activeTab === id ? styles.tabActive : "",
@@ -162,14 +177,13 @@ export default function BottomNav({ activeTab, onChange }: BottomNavProps) {
           ]
             .filter(Boolean)
             .join(" ")}
-          onClick={() => onChange(id)}
           aria-current={activeTab === id ? "page" : undefined}
         >
           <span className={styles.icon}>
             <Icon />
           </span>
           <span className={styles.label}>{label}</span>
-        </button>
+        </Link>
       ))}
     </nav>
   );

@@ -26,6 +26,7 @@
     opacity 0.15s,
     color 0.15s,
     background 0.15s;
+  text-decoration: none;
 }
 
 .tab:hover {

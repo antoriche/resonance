@@ -1,0 +1,127 @@
+.header {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  width: 100%;
+  flex: 0 0 auto;
+  box-sizing: border-box;
+}
+
+.title {
+  font-size: 1.5rem;
+  margin: 0;
+  flex: 1;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  flex: 1;
+  min-height: 0;
+}
+
+.panels {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  flex: 1;
+  min-height: 0;
+}
+
+.card {
+  background-color: white;
+  padding: 1rem;
+  border-radius: 25px;
+}
+
+/* ── Left panel: always-visible notes (desktop only) ── */
+.mainPanel {
+  flex: 2 1 auto;
+}
+
+/* ── Right panel: page content + desktop nav ── */
+.rightPanel {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+}
+
+.rightPanelInner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+/* Desktop-only nav wrapper */
+.desktopNav {
+  flex-shrink: 0;
+}
+
+/* ── ControlBar: flow card at bottom on desktop, fixed on mobile ── */
+.controlBarWrapper {
+  flex-shrink: 0;
+}
+
+/* Mobile-only nav wrapper (hidden on desktop) */
+.mobileNav {
+  display: none;
+}
+
+/* ── Mobile breakpoint ── */
+@media (max-width: 768px) {
+  .header {
+    padding: 0.5rem 0.75rem;
+  }
+
+  .main {
+    padding: 0.5rem;
+    gap: 0.5rem;
+    /* Room for mobile nav (~60px) + safe area */
+    padding-bottom: calc(0.5rem + 60px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .panels {
+    flex-direction: column;
+  }
+
+  /* Left panel: hidden on mobile — each page renders its own content */
+  .mainPanel {
+    display: none;
+  }
+
+  /* Right panel fills the screen on mobile */
+  .rightPanel {
+    flex: 1 1 auto;
+    border-radius: 16px;
+  }
+
+  /* Desktop nav hidden on mobile */
+  .desktopNav {
+    display: none;
+  }
+
+  /* ControlBar: normal flow card below panels on mobile, hidden on non-home */
+  .controlBarWrapper {
+    flex-shrink: 0;
+  }
+
+  .controlBarHideMobile {
+    display: none;
+  }
+
+  /* Mobile nav visible */
+  .mobileNav {
+    display: block;
+  }
+
+  .card {
+    border-radius: 16px;
+    padding: 0.75rem;
+  }
+}
