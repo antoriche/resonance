@@ -27,6 +27,7 @@ export interface ErrorResponse {
 export type TranscriptionListItem = Omit<Transcription, "embedding"> & {
   recordingTimestamp: Date;
   speakerName: string | null;
+  speakerId: string | null;
 };
 
 export type TranscriptionsPaginatedResponse =

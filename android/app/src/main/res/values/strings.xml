@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Resonance.ai</string>
+    <string name="title_activity_main">Resonance.ai</string>
+    <string name="package_name">resonance.app</string>
+    <string name="custom_url_scheme">resonance.app</string>
+</resources>
