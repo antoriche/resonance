@@ -4,7 +4,7 @@ import Ffmpeg, * as ffmpeg from "fluent-ffmpeg";
 import { createWriteStream, unlinkSync } from "fs";
 import { tmpdir } from "os";
 import { randomBytes } from "crypto";
-import { createLogger } from "@/lib/logger";
+import { createLogger } from "@/lib/server/logger";
 import { Embedding } from "@/types/embedding";
 
 // Lazily loaded so the native binary is not required at module evaluation

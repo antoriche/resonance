@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { getTranscriptionsPaginated } from "@/lib/db/operations";
-import { createLogger } from "@/lib/logger";
+import { getTranscriptionsPaginated } from "@/lib/server/db/operations";
+import { createLogger } from "@/lib/server/logger";
 
 export const dynamic = "force-dynamic";
 

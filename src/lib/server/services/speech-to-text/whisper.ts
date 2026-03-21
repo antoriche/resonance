@@ -1,13 +1,13 @@
-// ── Transformers Speech-to-Text Implementation ─────────────────────
+// ── Whisper Speech-to-Text Implementation ──────────────────────────
 
-import { createLogger } from "@/lib/logger";
 import { extractAudioSegment } from "../utils/extract-segment";
-import { transformersService } from "./transformers/index";
+import { whisperService } from "./whisper/index";
+import { createLogger } from "@/lib/server/logger";
 
 const logger = createLogger("speech-to-text");
 
 /**
- * Transcribe an audio segment using Transformers.js
+ * Transcribe an audio segment using local Whisper
  * Note: Function name has typo "speach" for backward compatibility
  *
  * @param filePath - Path to the audio file
@@ -28,24 +28,15 @@ export async function speachToText(
   );
 
   // Extract audio segment to temp file
-  const segmentStartTime = Date.now();
   const segment = await extractAudioSegment(
     filePath,
     options.offset,
     options.duration,
   );
-  const segmentExtractionTime = Date.now() - segmentStartTime;
-  logger.info(`Segment extraction took ${segmentExtractionTime}ms`);
 
   try {
-    // Transcribe the segment using Transformers
-    const transcribeStartTime = Date.now();
-    const result = await transformersService.transcribe(segment.path);
-    const transcriptionTime = Date.now() - transcribeStartTime;
-
-    logger.info(
-      `Transcription took ${transcriptionTime}ms to process ${options.duration}ms of audio`,
-    );
+    // Transcribe the segment using Whisper
+    const result = await whisperService.transcribe(segment.path);
 
     return {
       text: result.text,

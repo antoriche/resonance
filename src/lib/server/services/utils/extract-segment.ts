@@ -4,7 +4,7 @@ import { join } from "path";
 import { randomBytes } from "crypto";
 import { unlink, stat, access } from "fs/promises";
 import { constants } from "fs";
-import { createLogger } from "@/lib/logger";
+import { createLogger } from "@/lib/server/logger";
 
 // ── Audio Segment Extraction ────────────────────────────────────────
 

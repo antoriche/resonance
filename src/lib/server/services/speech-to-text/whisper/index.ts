@@ -2,7 +2,7 @@ import { nodewhisper } from "nodejs-whisper";
 import { existsSync } from "fs";
 import { resolve } from "path";
 import { getWhisperConfig, type WhisperConfig } from "./config";
-import { createLogger } from "@/lib/logger";
+import { createLogger } from "@/lib/server/logger";
 
 // ── Whisper Service ─────────────────────────────────────────
 

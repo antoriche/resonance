@@ -2,7 +2,7 @@
  * Mock implementation of speech-to-text
  * Used as fallback when Whisper is not available
  */
-import { createLogger } from "@/lib/logger";
+import { createLogger } from "@/lib/server/logger";
 
 const logger = createLogger("speech-to-text");
 

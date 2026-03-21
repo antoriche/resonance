@@ -4,9 +4,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { FFT_SIZE } from "@/lib/audio/constants";
-import { recordingService } from "@/lib/services/recording-service";
-import { useRecordingStore } from "@/lib/stores/recording";
+import { FFT_SIZE } from "@/lib/shared/audio/constants";
+import { recordingService } from "@/lib/client/services/recording-service";
+import { useRecordingStore } from "@/lib/client/stores/recording";
 
 // ── Selector hooks ───────────────────────────────────────────────────
 

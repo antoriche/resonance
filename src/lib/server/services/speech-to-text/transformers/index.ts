@@ -4,7 +4,7 @@ import {
 } from "@xenova/transformers";
 import { WaveFile } from "wavefile";
 import { readFileSync } from "fs";
-import { createLogger } from "@/lib/logger";
+import { createLogger } from "@/lib/server/logger";
 
 // ── Transformers Service ────────────────────────────────────────────
 

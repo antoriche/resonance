@@ -1,5 +1,5 @@
 import { Readable } from "node:stream";
-import { MAX_FILE_SIZE } from "./constants";
+import { MAX_FILE_SIZE } from "@/lib/shared/audio/constants";
 
 class MaxSizeExceededError extends Error {
   constructor(limit: number) {

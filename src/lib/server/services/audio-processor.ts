@@ -1,10 +1,10 @@
-import type { File } from "@/lib/db/schema";
-import { upsertTranscription, upsertFile } from "@/lib/db/operations";
-import { diarizeSpeaker } from "@/lib/services/speaker-diarization";
-import { speachToText } from "@/lib/services/speech-to-text";
+import type { File } from "@/lib/server/db/schema";
+import { upsertTranscription, upsertFile } from "@/lib/server/db/operations";
+import { diarizeSpeaker } from "@/lib/server/services/speaker-diarization";
+import { speachToText } from "@/lib/server/services/speech-to-text";
 import { stat } from "fs/promises";
 import { parseFile } from "music-metadata";
-import { createLogger } from "@/lib/logger";
+import { createLogger } from "@/lib/server/logger";
 import { Embedding } from "@/types/embedding";
 // ── Audio Processor Service ──────────────────────────────────────
 

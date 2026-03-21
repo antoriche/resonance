@@ -5,7 +5,7 @@ const databaseUrl = process.env.DATABASE_URL;
 const usePostgres = !!databaseUrl && !isDevelopment;
 
 export default defineConfig({
-  schema: "./src/lib/db/schema.ts",
+  schema: "./src/lib/server/db/schema.ts",
   out: "./drizzle",
   dialect: usePostgres ? "postgresql" : "sqlite",
   dbCredentials: usePostgres

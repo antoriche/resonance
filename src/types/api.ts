@@ -1,4 +1,4 @@
-import type { Transcription } from "@/lib/db/schema";
+import type { Transcription } from "@/lib/server/db/schema";
 
 // ── API Response Types ───────────────────────────────────────────────
 

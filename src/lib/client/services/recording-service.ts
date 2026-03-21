@@ -14,9 +14,9 @@ import {
   RECORDING_MIME_TYPE,
   RECORDING_MIME_FALLBACKS,
   FFT_SIZE,
-} from "@/lib/audio/constants";
-import { getMicStream, releaseMicStream } from "@/lib/audio/mic";
-import { useRecordingStore } from "@/lib/stores/recording";
+} from "@/lib/shared/audio/constants";
+import { getMicStream, releaseMicStream } from "@/lib/client/audio/mic";
+import { useRecordingStore } from "@/lib/client/stores/recording";
 
 // ── Helpers ──────────────────────────────────────────────────────────
 

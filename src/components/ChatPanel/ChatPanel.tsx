@@ -9,7 +9,7 @@ import React, {
 import _ from "lodash";
 import VerticalText from "../UI/VerticalText";
 import dayjs from "dayjs";
-import { relativeDate } from "@/lib/time";
+import { relativeDate } from "@/lib/shared/time";
 import Avatar from "../Avatar/Avatar";
 
 type ChatPanelProps = {

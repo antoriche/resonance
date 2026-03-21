@@ -1,10 +1,10 @@
 import chokidar, { type FSWatcher } from "chokidar";
 import path from "node:path";
-import { getFileByFilename } from "@/lib/db/operations";
+import { getFileByFilename } from "@/lib/server/db/operations";
 import { audioProcessor } from "./audio-processor";
-import { ALLOWED_EXTENSIONS } from "@/lib/audio/constants";
+import { ALLOWED_EXTENSIONS } from "@/lib/shared/audio/constants";
 import { storageBasePath } from "./storage";
-import { createLogger } from "@/lib/logger";
+import { createLogger } from "@/lib/server/logger";
 
 // ── Configuration ────────────────────────────────────────────
 

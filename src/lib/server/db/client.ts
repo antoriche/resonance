@@ -2,7 +2,7 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import path from "path";
 import { transcriptions, files, computed_speakers } from "./schema";
-import { createLogger } from "@/lib/logger";
+import { createLogger } from "@/lib/server/logger";
 
 const logger = createLogger("db");
 

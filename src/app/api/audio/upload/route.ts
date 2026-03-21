@@ -6,15 +6,15 @@ import {
   ALLOWED_MIME_TYPES,
   ALLOWED_EXTENSIONS,
   type UploadResult,
-} from "@/lib/audio/constants";
+} from "@/lib/shared/audio/constants";
 import {
   streamToBuffer,
   MaxSizeExceededError,
-} from "@/lib/audio/stream-to-buffer";
-import { authenticate } from "@/lib/middleware/auth";
-import { audioProcessor } from "@/lib/services/audio-processor";
-import { createLogger } from "@/lib/logger";
-import storage from "@/lib/services/storage";
+} from "@/lib/server/audio/stream-to-buffer";
+import { authenticate } from "@/lib/server/middleware/auth";
+import { audioProcessor } from "@/lib/server/services/audio-processor";
+import { createLogger } from "@/lib/server/logger";
+import storage from "@/lib/server/services/storage";
 
 const logger = createLogger("audio/upload");
 

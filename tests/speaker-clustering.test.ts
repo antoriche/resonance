@@ -8,7 +8,7 @@ import {
   coreEdgesSQL,
   borderAssignmentsAlasqlSQL,
   finalSelectAlasqlSQL,
-} from "@/lib/db/sql/dbscan";
+} from "@/lib/server/db/sql/dbscan";
 
 // ── Load diarized data ──────────────────────────────────────────────
 
