@@ -1,8 +1,8 @@
 "use client";
 
-import ControlBar from "@/components/ControlBar/ControlBar";
 import styles from "./root.module.css";
 import ChatPanel from "@/components/ChatPanel/ChatPanel";
+import ControlBar from "@/components/ControlBar/ControlBar";
 import {
   useInfiniteTranscriptions,
   useNewerTranscriptions,
@@ -11,9 +11,14 @@ import {
 import { useMemo, useState, useEffect } from "react";
 import { queryClient } from "./providers";
 import type { TranscriptionListItem } from "@/types/api";
+import BottomNav, { type Tab } from "@/components/BottomNav/BottomNav";
+import AIView from "@/components/views/AIView";
+import RecordView from "@/components/views/RecordView";
+import SettingsView from "@/components/views/SettingsView";
 
 export default function Home() {
   const [isAtBottom, setIsAtBottom] = useState(true);
+  const [activeTab, setActiveTab] = useState<Tab>("record");
 
   const {
     data,
@@ -108,42 +113,91 @@ export default function Home() {
     });
   }, [data]);
 
+  // Right panel visible on desktop always; on mobile only for non-transcriptions tabs
+  const rightPanelClass = [
+    styles.card,
+    styles.rightPanel,
+    activeTab !== "transcriptions" ? styles.rightPanelMobileVisible : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   if (error) {
     return (
-      <main className={styles.main}>
-        <div className={styles.panels}>
-          <section className={`${styles.card} ${styles.mainPanel}`}>
-            <div style={{ padding: "2rem", color: "red" }}>
-              Error loading transcriptions: {error.message}
-            </div>
-          </section>
-        </div>
-      </main>
+      <>
+        <header className={styles.header}>
+          <h1 className={styles.title}>Notetaker</h1>
+        </header>
+        <main className={styles.main}>
+          <div className={styles.panels}>
+            <section className={`${styles.card} ${styles.mainPanel}`}>
+              <div style={{ padding: "2rem", color: "red" }}>
+                Error loading transcriptions: {error.message}
+              </div>
+            </section>
+          </div>
+        </main>
+      </>
     );
   }
 
   return (
-    <main className={styles.main}>
-      <div className={styles.panels}>
-        <section className={`${styles.card} ${styles.leftPanel}`}>A</section>
-        <section className={`${styles.card} ${styles.mainPanel}`}>
-          {isLoading ? (
-            <div style={{ padding: "2rem" }}>Loading transcriptions...</div>
-          ) : (
-            <ChatPanel
-              messages={messages}
-              onLoadMore={fetchNextPage}
-              hasMore={hasNextPage}
-              isLoadingMore={isFetchingNextPage}
-              onScrollPositionChange={setIsAtBottom}
-            />
-          )}
-        </section>
-        <section className={`${styles.card} ${styles.rightPanel}`}>C</section>
+    <>
+      <header className={styles.header}>
+        <h1 className={styles.title}>Notetaker</h1>
+      </header>
+      <main className={styles.main}>
+        <div className={styles.panels}>
+          {/* ── Left / main panel: transcription list ────────────────
+              Hidden on mobile when a non-record tab is active.          */}
+          <section
+            className={[
+              styles.card,
+              styles.mainPanel,
+              activeTab !== "transcriptions" ? styles.mainPanelHideMobile : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+          >
+            {isLoading ? (
+              <div style={{ padding: "2rem" }}>Loading transcriptions...</div>
+            ) : (
+              <ChatPanel
+                messages={messages}
+                onLoadMore={fetchNextPage}
+                hasMore={hasNextPage}
+                isLoadingMore={isFetchingNextPage}
+                onScrollPositionChange={setIsAtBottom}
+              />
+            )}
+          </section>
+
+          {/* ── Right panel: active view + BottomNav (desktop) ────────
+              On desktop it sits right of the main panel.
+              On mobile it becomes full-screen for AI / Settings tabs.   */}
+          <section className={rightPanelClass}>
+            <div className={styles.rightPanelInner}>
+              {activeTab === "ai" && <AIView />}
+              {activeTab === "record" && <RecordView />}
+              {activeTab === "settings" && <SettingsView />}
+            </div>
+            {/* Desktop-only nav – hidden on mobile via CSS */}
+            <div className={styles.desktopNav}>
+              <BottomNav activeTab={activeTab} onChange={setActiveTab} />
+            </div>
+          </section>
+        </div>
+
+        {/* ── Persistent ControlBar: flow card on desktop, fixed on mobile ── */}
+        <div className={`${styles.card} ${styles.controlBarWrapper}`}>
+          <ControlBar />
+        </div>
+      </main>
+
+      {/* ── Mobile-only fixed footer nav – hidden on desktop via CSS ── */}
+      <div className={styles.mobileNav}>
+        <BottomNav activeTab={activeTab} onChange={setActiveTab} />
       </div>
-      <section className={`${styles.card} ${styles.bottomPanel}`}>
-        <ControlBar />
-      </section>
-    </main>
+    </>
   );
 }

@@ -1,0 +1,21 @@
+.viewContainer {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.viewContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+.placeholder {
+  margin: auto;
+  opacity: 0.4;
+  font-size: 0.9rem;
+}

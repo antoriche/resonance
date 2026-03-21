@@ -2,7 +2,9 @@
 
 # Load environment variables from .env file
 if [ -f .env ]; then
-  export $(cat .env | grep -v '^#' | xargs)
+  set -a
+  source .env
+  set +a
 fi
 
 # Stop and remove existing container if it exists

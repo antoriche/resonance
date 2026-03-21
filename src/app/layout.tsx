@@ -26,14 +26,10 @@ export default function RootLayout({
 }>) {
   return (
     <QueryProvider>
-      <html lang="en">
+      <html lang="en" suppressHydrationWarning>
         <body
           className={`${geistSans.variable} ${geistMono.variable} ${styles.body}`}
         >
-          <header className={styles.header}>
-            <h1 className={styles.title}>Notetaker</h1>
-          </header>
-
           {children}
         </body>
       </html>
