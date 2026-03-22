@@ -59,7 +59,14 @@ class RecordingService {
       // 1. Acquire microphone
       this.stream = await getMicStream();
 
-      // 2. Set up AudioContext + AnalyserNode for waveform viz
+      // 2. Verify MediaRecorder is available (not on all WebViews)
+      if (typeof MediaRecorder === "undefined") {
+        throw new Error(
+          "Recording is not supported on this device. Please update your OS.",
+        );
+      }
+
+      // 3. Set up AudioContext + AnalyserNode for waveform viz
       this.audioContext = new AudioContext();
       const source = this.audioContext.createMediaStreamSource(this.stream);
       const analyser = this.audioContext.createAnalyser();
@@ -68,7 +75,7 @@ class RecordingService {
       source.connect(analyser);
       this.store.setAnalyserNode(analyser);
 
-      // 3. Create MediaRecorder with timeslice-based chunking
+      // 4. Create MediaRecorder with timeslice-based chunking
       this.mimeType = pickMimeType();
       const options: MediaRecorderOptions = {};
       if (this.mimeType) options.mimeType = this.mimeType;
@@ -91,14 +98,14 @@ class RecordingService {
         // Final cleanup is handled in stop()
       };
 
-      // 4. Start recording with timeslice → fires ondataavailable every CHUNK_DURATION_MS
+      // 5. Start recording with timeslice → fires ondataavailable every CHUNK_DURATION_MS
       this.mediaRecorder.start(CHUNK_DURATION_MS);
 
-      // 5. Update store
+      // 6. Update store
       this.store.setStatus("recording");
       this.store.resetTime();
 
-      // 6. Start elapsed-time ticker
+      // 7. Start elapsed-time ticker
       this.startTimer();
     } catch (err) {
       const message =
@@ -152,7 +159,14 @@ class RecordingService {
   // ── Chunk upload ───────────────────────────────────────────────
 
   private async uploadChunk(blob: Blob): Promise<void> {
-    const extension = this.mimeType.includes("webm") ? "webm" : "ogg";
+    let extension = "webm";
+    if (this.mimeType.includes("mp4")) {
+      extension = "m4a";
+    } else if (this.mimeType.includes("ogg")) {
+      extension = "ogg";
+    } else if (this.mimeType.includes("webm") || !this.mimeType) {
+      extension = "webm";
+    }
     const filename = `chunk-${Date.now()}.${extension}`;
 
     const formData = new FormData();

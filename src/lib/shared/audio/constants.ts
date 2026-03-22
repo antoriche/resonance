@@ -28,8 +28,8 @@ export const RECORDING_MIME_TYPE = "audio/webm;codecs=opus";
 /** Fallback MIME types if preferred is not supported */
 export const RECORDING_MIME_FALLBACKS = [
   "audio/webm",
-  "audio/ogg;codecs=opus",
   "audio/mp4",
+  "audio/ogg;codecs=opus",
 ];
 
 /** Number of FFT bins for waveform visualization */
