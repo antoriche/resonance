@@ -17,6 +17,33 @@ async function getOrt(): Promise<typeof OrtType> {
 
 const logger = createLogger("diarize");
 
+// ── Cached ONNX sessions (singletons) ──────────────────────────────
+// Creating and GC-ing InferenceSession repeatedly causes a native
+// double-free ("pointer being freed was not allocated"). Keeping them
+// alive for the lifetime of the process avoids the issue entirely.
+let _segmentationSession: OrtType.InferenceSession | undefined;
+let _embeddingSession: OrtType.InferenceSession | undefined;
+
+async function getSegmentationSession(
+  modelPath: string,
+): Promise<OrtType.InferenceSession> {
+  if (!_segmentationSession) {
+    const ort = await getOrt();
+    _segmentationSession = await ort.InferenceSession.create(modelPath);
+  }
+  return _segmentationSession;
+}
+
+async function getEmbeddingSession(
+  modelPath: string,
+): Promise<OrtType.InferenceSession> {
+  if (!_embeddingSession) {
+    const ort = await getOrt();
+    _embeddingSession = await ort.InferenceSession.create(modelPath);
+  }
+  return _embeddingSession;
+}
+
 interface DiarizationSegment {
   offset: number;
   duration: number;
@@ -37,6 +64,7 @@ export async function diarizeSpeaker(
       process.cwd(),
       "src",
       "lib",
+      "server",
       "services",
       "speaker-diarization",
     );
@@ -45,12 +73,10 @@ export async function diarizeSpeaker(
 
     logger.info({ modelDir }, `Loading models`);
 
-    const ort = await getOrt();
-    const segmentationSession = await ort.InferenceSession.create(
+    const segmentationSession = await getSegmentationSession(
       segmentationModelPath,
     );
-    const embeddingSession =
-      await ort.InferenceSession.create(embeddingModelPath);
+    const embeddingSession = await getEmbeddingSession(embeddingModelPath);
 
     // Log model input/output info
     logger.info(
@@ -219,6 +245,9 @@ async function processSegmentationChunk(
   logger.info({ dims: outputTensor.dims }, `Segmentation output shape`);
   logger.info({ size: outputTensor.data.length }, `Segmentation output size`);
 
+  // Dispose the input tensor eagerly to avoid native double-free during GC
+  inputTensor.dispose();
+
   // Parse output - shape is [batch, frames, classes]
   // For pyannote models, classes typically represent speaker activity
   const dims = outputTensor.dims;
@@ -310,6 +339,9 @@ async function processSegmentationChunk(
 
   logger.info({ count: segments.length }, `Chunk found segments`);
 
+  // Dispose output tensor to prevent native double-free during GC
+  outputTensor.dispose();
+
   return segments;
 }
 
@@ -400,7 +432,12 @@ async function extractEmbeddings(
     // Run inference
     const outputs = await session.run({ [inputName]: inputTensor });
     const outputName = session.outputNames[0];
-    const embedding = outputs[outputName].data as Float32Array;
+    const outputTensor = outputs[outputName];
+    const embedding = new Float32Array(outputTensor.data as Float32Array);
+
+    // Dispose tensors eagerly to prevent native double-free during GC
+    inputTensor.dispose();
+    outputTensor.dispose();
 
     logger.info({ size: embedding.length }, `Got embedding`);
     embeddings.push(embedding);
