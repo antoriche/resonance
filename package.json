@@ -64,5 +64,10 @@
     "ts-jest": "^29.4.6",
     "tsx": "^4.21.0",
     "typescript": "^5"
+  },
+  "overrides": {
+    "@xenova/transformers": {
+      "onnxruntime-node": "npm:onnxruntime-web@1.14.0"
+    }
   }
 }
