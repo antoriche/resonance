@@ -1,10 +1,13 @@
 import ffmpeg from "fluent-ffmpeg";
+import ffmpegInstaller from "@ffmpeg-installer/ffmpeg";
 import { tmpdir } from "os";
 import { join } from "path";
 import { randomBytes } from "crypto";
 import { unlink, stat, access } from "fs/promises";
 import { constants } from "fs";
 import { createLogger } from "@/lib/server/logger";
+
+ffmpeg.setFfmpegPath(ffmpegInstaller.path);
 
 // ── Audio Segment Extraction ────────────────────────────────────────
 

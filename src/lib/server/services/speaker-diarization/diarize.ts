@@ -1,12 +1,15 @@
 import type * as OrtType from "onnxruntime-web";
 import { join } from "path";
 import Ffmpeg, * as ffmpeg from "fluent-ffmpeg";
+import ffmpegInstaller from "@ffmpeg-installer/ffmpeg";
 import { createWriteStream, unlinkSync } from "fs";
 import { writeFile, readFile } from "fs/promises";
 import { tmpdir } from "os";
 import { randomBytes } from "crypto";
 import { createLogger } from "@/lib/server/logger";
 import { Embedding } from "@/types/embedding";
+
+Ffmpeg.setFfmpegPath(ffmpegInstaller.path);
 
 // Lazily loaded so the WASM binary is not required at module evaluation
 // time (which would break Next.js builds).

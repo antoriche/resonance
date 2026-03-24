@@ -20,6 +20,7 @@
     "@capacitor/android": "^8.2.0",
     "@capacitor/core": "^8.2.0",
     "@capacitor/ios": "^8.2.0",
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@tanstack/react-query": "^5.90.21",
     "@types/fluent-ffmpeg": "^2.1.28",
     "@vercel/blob": "^2.3.1",
