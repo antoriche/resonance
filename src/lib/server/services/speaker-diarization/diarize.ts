@@ -11,7 +11,13 @@ import { Embedding } from "@/types/embedding";
 // time (which would break Next.js builds).
 let _ort: typeof OrtType | undefined;
 async function getOrt(): Promise<typeof OrtType> {
-  if (!_ort) _ort = await import("onnxruntime-web");
+  if (!_ort) {
+    _ort = await import("onnxruntime-web");
+    // Load WASM binaries from CDN instead of the local filesystem so they
+    // are not bundled into the serverless function (each file is ~9.5 MB).
+    _ort.env.wasm.wasmPaths =
+      "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.14.0/dist/";
+  }
   return _ort;
 }
 

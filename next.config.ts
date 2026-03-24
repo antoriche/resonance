@@ -30,6 +30,8 @@ const nextConfig: NextConfig = {
       "./node_modules/nodejs-whisper",
       // Exclude non-essential dist files (source is used, not the webpack bundle)
       "./node_modules/@xenova/transformers/dist",
+      // WASM binaries are fetched from CDN at runtime — no need to bundle them
+      "./node_modules/onnxruntime-web/dist/*.wasm",
     ],
   },
   // Empty turbopack config to silence Next.js 16 warning
