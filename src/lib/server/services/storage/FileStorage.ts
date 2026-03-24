@@ -14,10 +14,6 @@ export class FileStorage extends Storage {
     return this.basePath;
   }
 
-  getLocalPath(key: string): string {
-    return path.join(this.basePath, key);
-  }
-
   async saveFile(key: string, content: Buffer): Promise<void> {
     const filePath = path.join(this.basePath, key);
     const dir = path.dirname(filePath);

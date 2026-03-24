@@ -16,10 +16,6 @@ export class VercelStorage extends Storage {
     this.prefix = config.prefix;
   }
 
-  getLocalPath(_key: string): null {
-    return null;
-  }
-
   private getFullKey(key: string): string {
     return this.prefix ? `${this.prefix}/${key}` : key;
   }

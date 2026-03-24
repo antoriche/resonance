@@ -36,11 +36,11 @@ function jsonError(message: string, status: number) {
 /**
  * Trigger audio processing (fire-and-forget)
  */
-async function triggerProcessing(destPath: string, id: string) {
+async function triggerProcessing(key: string, id: string) {
   try {
     logger.info({ id }, `Triggered async processing`);
 
-    audioProcessor.syncFileData(destPath).catch((err) => {
+    audioProcessor.syncFileData(key).catch((err) => {
       logger.error({ id, err }, `Background processing failed`);
     });
   } catch (error) {
@@ -114,13 +114,8 @@ async function handleRawStream(request: Request, contentType: string) {
       createdAt: new Date().toISOString(),
     };
 
-    // Trigger audio processing (requires local file path)
-    const localPath = storage.getLocalPath(filename);
-    if (localPath) {
-      await triggerProcessing(localPath, id);
-    } else {
-      logger.warn({ id }, "Cloud storage detected, skipping local processing");
-    }
+    // Trigger audio processing
+    await triggerProcessing(filename, id);
 
     return NextResponse.json(result, { status: 201 });
   } catch (error) {
@@ -188,13 +183,8 @@ async function handleMultipart(request: Request) {
       createdAt: new Date().toISOString(),
     };
 
-    // Trigger audio processing (requires local file path)
-    const localPath = storage.getLocalPath(filename);
-    if (localPath) {
-      await triggerProcessing(localPath, id);
-    } else {
-      logger.warn({ id }, "Cloud storage detected, skipping local processing");
-    }
+    // Trigger audio processing
+    await triggerProcessing(filename, id);
 
     return NextResponse.json(result, { status: 201 });
   } catch (error) {

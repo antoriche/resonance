@@ -2,36 +2,46 @@ import type { File } from "@/lib/server/db/schema";
 import { upsertTranscription, upsertFile } from "@/lib/server/db/operations";
 import { diarizeSpeaker } from "@/lib/server/services/speaker-diarization";
 import { speachToText } from "@/lib/server/services/speech-to-text";
-import { stat } from "fs/promises";
+import { writeFile, unlink, stat } from "fs/promises";
 import { parseFile } from "music-metadata";
+import { join } from "path";
+import { tmpdir } from "os";
+import { randomBytes } from "crypto";
 import { createLogger } from "@/lib/server/logger";
 import { Embedding } from "@/types/embedding";
+import storage from "@/lib/server/services/storage";
 // ── Audio Processor Service ──────────────────────────────────────
 
 const logger = createLogger("audio-processor");
 
 class AudioProcessor {
   /**
-   * Process an audio file: transcribe it and store results in DB
+   * Fetch the file from storage into a temp path, run processing, clean up.
    */
-  async syncFileData(filePath: string): Promise<{
+  async syncFileData(key: string): Promise<{
     fileId: string;
   }> {
-    const fileId = filePath;
+    const fileId = key;
+    const tempPath = join(
+      tmpdir(),
+      `resonance-${randomBytes(8).toString("hex")}-${key}`,
+    );
 
     try {
-      const recordingTimestamp = await this.getRecordingTimestamp(filePath);
+      const buffer = await storage.getFile(key);
+      await writeFile(tempPath, buffer);
+
+      const recordingTimestamp = await this.getRecordingTimestamp(tempPath);
 
       const newFile: File = {
         id: fileId,
-        filePath,
+        filePath: key,
         recordingTimestamp,
       };
 
       logger.info({ fileId }, `Created file record`);
 
-      // Perform transcription (stubbed for now)
-      const segments = await this.processFile(filePath);
+      const segments = await this.processFile(tempPath);
 
       await upsertFile(newFile);
 
@@ -56,6 +66,8 @@ class AudioProcessor {
     } catch (error) {
       logger.error({ fileId, error }, `Transcription failed`);
       throw error;
+    } finally {
+      await unlink(tempPath).catch(() => {});
     }
   }
 

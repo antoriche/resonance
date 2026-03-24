@@ -3,7 +3,6 @@ import path from "node:path";
 import { getFileByFilename } from "@/lib/server/db/operations";
 import { audioProcessor } from "./audio-processor";
 import { ALLOWED_EXTENSIONS } from "@/lib/shared/audio/constants";
-import { storageBasePath } from "./storage";
 import { createLogger } from "@/lib/server/logger";
 
 // ── Configuration ────────────────────────────────────────────
@@ -26,17 +25,15 @@ class FileWatcher {
       return;
     }
 
-    if (!storageBasePath) {
-      logger.error(
-        "File watcher only works with FileStorage (local storage). Current storage is cloud-based.",
-      );
+    if (!process.env.STORAGE) {
+      logger.error("STORAGE environment variable is not defined.");
       return;
     }
 
     const allowedExtensions = Array.from(ALLOWED_EXTENSIONS);
-    const globPattern = `${storageBasePath}/**/*{${allowedExtensions.join(",")}}`;
+    const globPattern = `${process.env.STORAGE}/**/*{${allowedExtensions.join(",")}}`;
 
-    logger.info({ uploadDir: storageBasePath }, `Starting watcher`);
+    logger.info({ uploadDir: process.env.STORAGE }, `Starting watcher`);
     logger.info(
       { extensions: allowedExtensions.join(", ") },
       `Watching extensions`,
@@ -93,7 +90,7 @@ class FileWatcher {
 
       // Trigger processing
       logger.info({ filename }, `Triggering processing`);
-      await audioProcessor.syncFileData(filePath);
+      await audioProcessor.syncFileData(filename);
 
       logger.info({ filename }, `Processing initiated`);
     } catch (error) {

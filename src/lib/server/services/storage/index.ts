@@ -41,18 +41,14 @@ function createStorage(storageUri: string): Storage {
 
   // File format: file://path, /absolute/path, ./relative/path, or just path
   if (storageUri.startsWith("file://")) {
-    const basePath = storageUri.slice(7);
-    storageBasePath = basePath;
-    return new FileStorage(basePath); // Remove 'file://'
+    return new FileStorage(storageUri.slice(7)); // Remove 'file://'
   }
 
   // Default to file storage for any other path
-  storageBasePath = storageUri;
   return new FileStorage(storageUri);
 }
 
 let _storageInstance: Storage | null = null;
-let storageBasePath: string | null = null;
 
 function getStorageInstance(): Storage {
   if (!_storageInstance) {
@@ -74,4 +70,3 @@ const storageInstance = new Proxy({} as Storage, {
 });
 
 export default storageInstance;
-export { storageBasePath };

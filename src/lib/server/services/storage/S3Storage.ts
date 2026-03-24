@@ -26,10 +26,6 @@ export class S3Storage extends Storage {
     });
   }
 
-  getLocalPath(_key: string): null {
-    return null;
-  }
-
   async saveFile(key: string, content: Buffer): Promise<void> {
     const fullKey = this.prefix ? `${this.prefix}/${key}` : key;
     const command = new PutObjectCommand({
