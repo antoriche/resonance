@@ -13,26 +13,23 @@ const nextConfig: NextConfig = {
         as: "*.js",
       },
     },
-    resolveAlias: {
-      "onnxruntime-node": "onnxruntime-web",
-    },
   },
   webpack(config) {
     config.module.rules.push({
       test: /\.svg$/,
       use: ["@svgr/webpack"],
     });
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      "onnxruntime-node": "onnxruntime-web",
-    };
     return config;
   },
   serverExternalPackages: ["pg-embedded", "nodejs-whisper"],
-  outputFileTracingIncludes: {
-    "/api/audio/*": [
-      "./node_modules/@xenova/transformers/**/*",
-      "./node_modules/onnxruntime-node/**/*",
+  outputFileTracingExcludes: {
+    "/api/*": [
+      "./node_modules/onnxruntime-node",
+      "./node_modules/@xenova/transformers/node_modules/onnxruntime-node",
+      "./node_modules/@xenova/transformers/node_modules/sharp",
+      "./node_modules/nodejs-whisper",
+      // Exclude non-essential dist files (source is used, not the webpack bundle)
+      "./node_modules/@xenova/transformers/dist",
     ],
   },
   // Empty turbopack config to silence Next.js 16 warning

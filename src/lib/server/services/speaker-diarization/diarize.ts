@@ -1,4 +1,4 @@
-import type * as OrtType from "onnxruntime-node";
+import type * as OrtType from "onnxruntime-web";
 import { join } from "path";
 import Ffmpeg, * as ffmpeg from "fluent-ffmpeg";
 import { createWriteStream, unlinkSync } from "fs";
@@ -7,11 +7,11 @@ import { randomBytes } from "crypto";
 import { createLogger } from "@/lib/server/logger";
 import { Embedding } from "@/types/embedding";
 
-// Lazily loaded so the native binary is not required at module evaluation
-// time (which would break Next.js builds when the binary is missing).
+// Lazily loaded so the WASM binary is not required at module evaluation
+// time (which would break Next.js builds).
 let _ort: typeof OrtType | undefined;
 async function getOrt(): Promise<typeof OrtType> {
-  if (!_ort) _ort = await import("onnxruntime-node");
+  if (!_ort) _ort = await import("onnxruntime-web");
   return _ort;
 }
 
@@ -245,9 +245,6 @@ async function processSegmentationChunk(
   logger.info({ dims: outputTensor.dims }, `Segmentation output shape`);
   logger.info({ size: outputTensor.data.length }, `Segmentation output size`);
 
-  // Dispose the input tensor eagerly to avoid native double-free during GC
-  inputTensor.dispose();
-
   // Parse output - shape is [batch, frames, classes]
   // For pyannote models, classes typically represent speaker activity
   const dims = outputTensor.dims;
@@ -338,9 +335,6 @@ async function processSegmentationChunk(
   }
 
   logger.info({ count: segments.length }, `Chunk found segments`);
-
-  // Dispose output tensor to prevent native double-free during GC
-  outputTensor.dispose();
 
   return segments;
 }
@@ -434,10 +428,6 @@ async function extractEmbeddings(
     const outputName = session.outputNames[0];
     const outputTensor = outputs[outputName];
     const embedding = new Float32Array(outputTensor.data as Float32Array);
-
-    // Dispose tensors eagerly to prevent native double-free during GC
-    inputTensor.dispose();
-    outputTensor.dispose();
 
     logger.info({ size: embedding.length }, `Got embedding`);
     embeddings.push(embedding);
