@@ -2,6 +2,7 @@ import type * as OrtType from "onnxruntime-web";
 import { join } from "path";
 import Ffmpeg, * as ffmpeg from "fluent-ffmpeg";
 import { createWriteStream, unlinkSync } from "fs";
+import { writeFile } from "fs/promises";
 import { tmpdir } from "os";
 import { randomBytes } from "crypto";
 import { createLogger } from "@/lib/server/logger";
@@ -13,10 +14,22 @@ let _ort: typeof OrtType | undefined;
 async function getOrt(): Promise<typeof OrtType> {
   if (!_ort) {
     _ort = await import("onnxruntime-web");
-    // Load WASM binaries from CDN instead of the local filesystem so they
-    // are not bundled into the serverless function (each file is ~9.5 MB).
-    _ort.env.wasm.wasmPaths =
-      "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.14.0/dist/";
+    // In Node.js, `wasmPaths` is a filesystem path — not a URL — so we
+    // fetch the SIMD binary from CDN once per process, write it to /tmp,
+    // and point `wasmPaths` at that file. Threading is disabled (numThreads=1)
+    // because SharedArrayBuffer is not available in serverless environments.
+    const cdnUrl =
+      "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.14.0/dist/ort-wasm-simd.wasm";
+    const res = await fetch(cdnUrl);
+    if (!res.ok) {
+      throw new Error(
+        `Failed to fetch onnxruntime WASM from CDN: ${res.status} ${res.statusText}`,
+      );
+    }
+    const wasmPath = join(tmpdir(), "ort-wasm-simd.wasm");
+    await writeFile(wasmPath, Buffer.from(await res.arrayBuffer()));
+    _ort.env.wasm.wasmPaths = { "ort-wasm-simd.wasm": wasmPath };
+    _ort.env.wasm.numThreads = 1;
   }
   return _ort;
 }
