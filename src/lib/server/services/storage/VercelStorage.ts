@@ -35,7 +35,7 @@ export class VercelStorage extends Storage {
   async saveFile(key: string, content: Buffer): Promise<void> {
     const fullKey = this.getFullKey(key);
     await put(fullKey, content, {
-      access: "public",
+      access: "private",
       token: this.token,
     });
   }
