@@ -1,6 +1,7 @@
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
+import { waitUntil } from "@vercel/functions";
 
 import {
   ALLOWED_MIME_TYPES,
@@ -34,19 +35,15 @@ function jsonError(message: string, status: number) {
 }
 
 /**
- * Trigger audio processing (fire-and-forget)
+ * Trigger audio processing (fire-and-forget, kept alive on Vercel via waitUntil)
  */
-async function triggerProcessing(key: string, id: string) {
-  try {
-    logger.info({ id }, `Triggered async processing`);
-
+function triggerProcessing(key: string, id: string) {
+  logger.info({ id }, `Triggered async processing`);
+  waitUntil(
     audioProcessor.syncFileData(key).catch((err) => {
       logger.error({ id, err }, `Background processing failed`);
-    });
-  } catch (error) {
-    // Don't fail the upload if processing initialization fails
-    logger.error({ id, error }, `Failed to trigger processing`);
-  }
+    }),
+  );
 }
 
 // ── Route handler ────────────────────────────────────────────────────
@@ -115,7 +112,7 @@ async function handleRawStream(request: Request, contentType: string) {
     };
 
     // Trigger audio processing
-    await triggerProcessing(filename, id);
+    triggerProcessing(filename, id);
 
     return NextResponse.json(result, { status: 201 });
   } catch (error) {
@@ -184,7 +181,7 @@ async function handleMultipart(request: Request) {
     };
 
     // Trigger audio processing
-    await triggerProcessing(filename, id);
+    triggerProcessing(filename, id);
 
     return NextResponse.json(result, { status: 201 });
   } catch (error) {
