@@ -2,7 +2,7 @@ import type * as OrtType from "onnxruntime-web";
 import { join } from "path";
 import Ffmpeg, * as ffmpeg from "fluent-ffmpeg";
 import { createWriteStream, unlinkSync } from "fs";
-import { writeFile } from "fs/promises";
+import { writeFile, readFile } from "fs/promises";
 import { tmpdir } from "os";
 import { randomBytes } from "crypto";
 import { createLogger } from "@/lib/server/logger";
@@ -48,7 +48,9 @@ async function getSegmentationSession(
 ): Promise<OrtType.InferenceSession> {
   if (!_segmentationSession) {
     const ort = await getOrt();
-    _segmentationSession = await ort.InferenceSession.create(modelPath);
+    // Read via fs.readFile so Next.js's fetch polyfill never sees the path
+    const modelBuffer = await readFile(modelPath);
+    _segmentationSession = await ort.InferenceSession.create(modelBuffer);
   }
   return _segmentationSession;
 }
@@ -58,7 +60,8 @@ async function getEmbeddingSession(
 ): Promise<OrtType.InferenceSession> {
   if (!_embeddingSession) {
     const ort = await getOrt();
-    _embeddingSession = await ort.InferenceSession.create(modelPath);
+    const modelBuffer = await readFile(modelPath);
+    _embeddingSession = await ort.InferenceSession.create(modelBuffer);
   }
   return _embeddingSession;
 }
