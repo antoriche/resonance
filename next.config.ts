@@ -29,6 +29,12 @@ const nextConfig: NextConfig = {
     return config;
   },
   serverExternalPackages: ["pg-embedded", "nodejs-whisper"],
+  outputFileTracingIncludes: {
+    "/api/audio/*": [
+      "./node_modules/@xenova/transformers/**/*",
+      "./node_modules/onnxruntime-node/**/*",
+    ],
+  },
   // Empty turbopack config to silence Next.js 16 warning
   // turbopack: {},
 };

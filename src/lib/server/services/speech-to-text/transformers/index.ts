@@ -1,10 +1,16 @@
-import {
-  pipeline,
-  AutomaticSpeechRecognitionPipeline,
-} from "@xenova/transformers";
+import type { AutomaticSpeechRecognitionPipeline } from "@xenova/transformers";
 import { WaveFile } from "wavefile";
 import { readFileSync } from "fs";
 import { createLogger } from "@/lib/server/logger";
+
+// Lazily load @xenova/transformers to avoid loading the native onnxruntime
+// binary at module evaluation time (which fails on Vercel serverless).
+async function loadPipeline(
+  ...args: Parameters<typeof import("@xenova/transformers").pipeline>
+): Promise<AutomaticSpeechRecognitionPipeline> {
+  const { pipeline } = await import("@xenova/transformers");
+  return (await pipeline(...args)) as AutomaticSpeechRecognitionPipeline;
+}
 
 // ── Transformers Service ────────────────────────────────────────────
 
@@ -54,7 +60,7 @@ class TransformersService {
     logger.info(`Loading model: ${this.modelName}`);
 
     try {
-      this.transcriber = await pipeline(
+      this.transcriber = await loadPipeline(
         "automatic-speech-recognition",
         this.modelName,
       );
