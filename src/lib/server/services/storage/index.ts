@@ -3,7 +3,7 @@ import { S3Storage } from "./S3Storage";
 import { VercelStorage } from "./VercelStorage";
 import { Storage } from "./Storage";
 
-const { VERCEL_BLOB_TOKEN } = process.env;
+const BLOB_READ_WRITE_TOKEN = process.env.BLOB_READ_WRITE_TOKEN;
 
 function createStorage(storageUri: string): Storage {
   // S3 format: s3://bucket/prefix or s3://bucket
@@ -25,16 +25,16 @@ function createStorage(storageUri: string): Storage {
 
   // Vercel format: vercel://prefix or vercel://
   if (storageUri.startsWith("vercel://")) {
-    if (!VERCEL_BLOB_TOKEN) {
+    if (!BLOB_READ_WRITE_TOKEN) {
       throw new Error(
-        "VERCEL_BLOB_TOKEN environment variable is required for Vercel storage",
+        "BLOB_READ_WRITE_TOKEN environment variable is required for Vercel storage",
       );
     }
 
     const prefix = storageUri.slice(9) || undefined; // Remove 'vercel://'
 
     return new VercelStorage({
-      token: VERCEL_BLOB_TOKEN,
+      token: BLOB_READ_WRITE_TOKEN,
       prefix,
     });
   }
