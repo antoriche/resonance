@@ -46,8 +46,12 @@ export class VercelStorage extends Storage {
       throw new Error(`File not found: ${key}`);
     }
 
-    // Fetch the content from the URL
-    const response = await fetch(blob.url);
+    // Private blobs require the Bearer token to be fetched directly
+    const response = await fetch(blob.url, {
+      headers: {
+        Authorization: `Bearer ${this.token}`,
+      },
+    });
     if (!response.ok) {
       throw new Error(`Failed to fetch file: ${key}`);
     }
