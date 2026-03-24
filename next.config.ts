@@ -21,7 +21,7 @@ const nextConfig: NextConfig = {
     });
     return config;
   },
-  serverExternalPackages: ["pg-embedded", "nodejs-whisper"],
+  serverExternalPackages: ["pg-embedded", "nodejs-whisper", "@ffmpeg-installer/ffmpeg"],
   outputFileTracingExcludes: {
     "/api/*": [
       "./node_modules/onnxruntime-node",
