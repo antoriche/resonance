@@ -306,7 +306,11 @@ class RecordingService {
    * FFmpeg can parse independently.
    */
   private async handleChunk(blob: Blob): Promise<void> {
-    if (this.isFirstChunk) {
+    // Capture references before any await — cleanup() may null them
+    const initSeg = this.webmInitSegment;
+    const first = this.isFirstChunk;
+
+    if (first) {
       this.isFirstChunk = false;
 
       // Only relevant for WebM — other containers don't have this issue
@@ -319,8 +323,8 @@ class RecordingService {
     }
 
     // Subsequent WebM chunks need the init segment prepended
-    if (this.webmInitSegment) {
-      const completeBlob = prependInitSegment(this.webmInitSegment, blob);
+    if (initSeg) {
+      const completeBlob = prependInitSegment(initSeg, blob);
       return this.uploadChunk(completeBlob);
     }
 

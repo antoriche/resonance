@@ -2,7 +2,7 @@ import type { File } from "@/lib/server/db/schema";
 import { upsertTranscription, upsertFile } from "@/lib/server/db/operations";
 import { diarizeSpeaker } from "@/lib/server/services/speaker-diarization";
 import { speachToText } from "@/lib/server/services/speech-to-text";
-import { writeFile, unlink, stat } from "fs/promises";
+import { writeFile, unlink, stat, readFile } from "fs/promises";
 import { parseFile } from "music-metadata";
 import { join } from "path";
 import { tmpdir } from "os";
@@ -30,6 +30,35 @@ class AudioProcessor {
     try {
       const buffer = await storage.getFile(key);
       await writeFile(tempPath, buffer);
+
+      // Validate the file is a recognisable audio container before
+      // passing it to FFmpeg. WebM chunks recorded with MediaRecorder
+      // timeslice may be missing the EBML header if the client didn't
+      // prepend the init segment.
+      if (key.endsWith(".webm")) {
+        const header = Buffer.alloc(4);
+        const fd = await import("fs").then((fs) =>
+          fs.promises.open(tempPath, "r"),
+        );
+        try {
+          await fd.read(header, 0, 4, 0);
+        } finally {
+          await fd.close();
+        }
+        // EBML magic bytes: 0x1A 0x45 0xDF 0xA3
+        if (
+          header[0] !== 0x1a ||
+          header[1] !== 0x45 ||
+          header[2] !== 0xdf ||
+          header[3] !== 0xa3
+        ) {
+          logger.warn(
+            { fileId },
+            "WebM file missing EBML header — skipping (likely a chunk without init segment)",
+          );
+          return { fileId };
+        }
+      }
 
       const recordingTimestamp = await this.getRecordingTimestamp(tempPath);
 
