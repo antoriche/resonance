@@ -31,6 +31,13 @@ const nextConfig: NextConfig = {
     "nodejs-whisper",
     "@ffmpeg-installer/ffmpeg",
   ],
+  outputFileTracingIncludes: {
+    "/api/*": [
+      // onnxruntime-node is aliased to onnxruntime-web via npm — file tracer
+      // doesn't follow the alias, so we force-include its dist files.
+      "./node_modules/onnxruntime-node/**",
+    ],
+  },
   outputFileTracingExcludes: {
     "/api/*": [
       // onnxruntime-node is now aliased to onnxruntime-web (pure JS/WASM),
