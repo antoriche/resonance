@@ -19,6 +19,8 @@
 		AA000001AAAA000100000008 /* ResonanceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000001AAAA000100000013 /* ResonanceViewController.swift */; };
 		AA000001AAAA000100000003 /* RecordingActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000001AAAA000100000012 /* RecordingActivityAttributes.swift */; };
 		AA000001AAAA000100000004 /* RecordingActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000001AAAA000100000012 /* RecordingActivityAttributes.swift */; };
+		AA000001AAAA000100000009 /* RecordingEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000001AAAA000100000014 /* RecordingEngine.swift */; };
+		AA000001AAAA00010000000A /* AutoRecordMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000001AAAA000100000015 /* AutoRecordMonitor.swift */; };
 		AA000001AAAA000100000005 /* RecordingWidgetExtensionBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000001AAAA000100000020 /* RecordingWidgetExtensionBundle.swift */; };
 		AA000001AAAA000100000006 /* RecordingWidgetExtensionLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000001AAAA000100000021 /* RecordingWidgetExtensionLiveActivity.swift */; };
 		AA000001AAAA000100000007 /* RecordingWidgetExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = AA000001AAAA000100000030 /* RecordingWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -62,6 +64,8 @@
 		AA000001AAAA000100000010 /* ResonanceRecorderPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResonanceRecorderPlugin.swift; sourceTree = "<group>"; };
 		AA000001AAAA000100000013 /* ResonanceViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResonanceViewController.swift; sourceTree = "<group>"; };
 		AA000001AAAA000100000012 /* RecordingActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingActivityAttributes.swift; sourceTree = "<group>"; };
+		AA000001AAAA000100000014 /* RecordingEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingEngine.swift; sourceTree = "<group>"; };
+		AA000001AAAA000100000015 /* AutoRecordMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoRecordMonitor.swift; sourceTree = "<group>"; };
 		AA000001AAAA000100000020 /* RecordingWidgetExtensionBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingWidgetExtensionBundle.swift; sourceTree = "<group>"; };
 		AA000001AAAA000100000021 /* RecordingWidgetExtensionLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingWidgetExtensionLiveActivity.swift; sourceTree = "<group>"; };
 		AA000001AAAA000100000022 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -113,6 +117,8 @@
 				504EC3071FED79650016851F /* AppDelegate.swift */,
 				AA000001AAAA000100000013 /* ResonanceViewController.swift */,
 				AA000001AAAA000100000010 /* ResonanceRecorderPlugin.swift */,
+				AA000001AAAA000100000014 /* RecordingEngine.swift */,
+				AA000001AAAA000100000015 /* AutoRecordMonitor.swift */,
 				AA000001AAAA000100000012 /* RecordingActivityAttributes.swift */,
 				504EC30B1FED79650016851F /* Main.storyboard */,
 				504EC30E1FED79650016851F /* Assets.xcassets */,
@@ -249,6 +255,8 @@
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
 				AA000001AAAA000100000008 /* ResonanceViewController.swift in Sources */,
 				AA000001AAAA000100000001 /* ResonanceRecorderPlugin.swift in Sources */,
+				AA000001AAAA000100000009 /* RecordingEngine.swift in Sources */,
+				AA000001AAAA00010000000A /* AutoRecordMonitor.swift in Sources */,
 				AA000001AAAA000100000003 /* RecordingActivityAttributes.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -12,6 +12,10 @@ export interface ResonanceRecorderPlugin {
   pauseRecording(): Promise<RecordingResult>;
   resumeRecording(): Promise<RecordingResult>;
   getRecordingStatus(): Promise<RecordingResult>;
+  setAutoRecordEnabled(options: {
+    enabled: boolean;
+  }): Promise<{ enabled: boolean }>;
+  getAutoRecordEnabled(): Promise<{ enabled: boolean }>;
   addListener(
     eventName: "recordingTick",
     listenerFunc: (data: { elapsedSeconds: number; status: string }) => void,
