@@ -8,7 +8,10 @@ import { createLogger } from "@/lib/server/logger";
 async function loadPipeline(
   ...args: Parameters<typeof import("@xenova/transformers").pipeline>
 ): Promise<AutomaticSpeechRecognitionPipeline> {
-  const { pipeline } = await import("@xenova/transformers");
+  const { pipeline, env } = await import("@xenova/transformers");
+  // Force single-threaded WASM — SharedArrayBuffer is not available in
+  // Vercel serverless, which breaks the threaded WASM backend.
+  (env.backends as any).onnx.wasm.numThreads = 1;
   return (await pipeline(...args)) as AutomaticSpeechRecognitionPipeline;
 }
 

@@ -13,6 +13,11 @@ const nextConfig: NextConfig = {
         as: "*.js",
       },
     },
+    // Redirect onnxruntime-node → onnxruntime-web (WASM backend) so
+    // @xenova/transformers works in Vercel serverless (no native binary).
+    resolveAlias: {
+      "onnxruntime-node": "onnxruntime-web",
+    },
   },
   webpack(config) {
     config.module.rules.push({
@@ -34,8 +39,8 @@ const nextConfig: NextConfig = {
       "./node_modules/nodejs-whisper",
       // Exclude non-essential dist files (source is used, not the webpack bundle)
       "./node_modules/@xenova/transformers/dist",
-      // WASM binaries are fetched from CDN at runtime — no need to bundle them
-      "./node_modules/onnxruntime-web/dist/*.wasm",
+      // WASM binaries must stay in the bundle for serverless (no CDN fallback)
+      // "./node_modules/onnxruntime-web/dist/*.wasm",
     ],
   },
   // Empty turbopack config to silence Next.js 16 warning
