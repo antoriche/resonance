@@ -53,7 +53,7 @@ if (fs.existsSync(envLocalPath)) {
 if (envContent.match(/^CAPACITOR_SERVER_URL=.*$/m)) {
   envContent = envContent.replace(
     /^CAPACITOR_SERVER_URL=.*$/m,
-    `CAPACITOR_SERVER_URL=${url}`
+    `CAPACITOR_SERVER_URL=${url}`,
   );
 } else {
   envContent = envContent.trimEnd() + `\nCAPACITOR_SERVER_URL=${url}\n`;
