@@ -31,7 +31,6 @@ const nextConfig: NextConfig = {
       "./node_modules/onnxruntime-node",
       "./node_modules/@xenova/transformers/node_modules/onnxruntime-node",
       "./node_modules/@xenova/transformers/node_modules/sharp",
-      "./node_modules/@xenova/transformers/dist",
       "./node_modules/nodejs-whisper",
     ],
   },
