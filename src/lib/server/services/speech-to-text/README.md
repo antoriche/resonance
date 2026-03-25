@@ -9,9 +9,19 @@ Set the `SPEECH_TO_TEXT_ENGINE` environment variable in `.env`:
 | Value           | Description                                                                   |
 | --------------- | ----------------------------------------------------------------------------- |
 | `LOCAL_WHISPER` | Real transcription via Transformers.js (Xenova). **Default** when unset.      |
+| `API_WHISPER`   | Remote transcription via the OpenAI Whisper API. Requires `OPENAI_API_KEY`.   |
 | `MOCK`          | Returns placeholder text — useful for development without downloading models. |
 
-### Model Selection
+### OpenAI Whisper API
+
+When using `API_WHISPER`, set the following in `.env`:
+
+| Variable         | Required | Default     | Description                                                        |
+| ---------------- | -------- | ----------- | ------------------------------------------------------------------ |
+| `OPENAI_API_KEY` | Yes      | —           | Your OpenAI API key                                                |
+| `WHISPER_MODEL`  | No       | `whisper-1` | Model name (shared with `LOCAL_WHISPER`, see Model Selection below) |
+
+### Model Selection (LOCAL_WHISPER)
 
 Set `WHISPER_MODEL` in `.env` to control which Hugging Face model is loaded:
 
