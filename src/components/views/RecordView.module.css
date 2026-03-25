@@ -37,8 +37,13 @@
 }
 
 @keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
 }
 
 .statusLabel {
@@ -48,7 +53,9 @@
   letter-spacing: 0.12em;
   color: var(--text-color);
   opacity: 0.35;
-  transition: opacity 0.3s ease, color 0.3s ease;
+  transition:
+    opacity 0.3s ease,
+    color 0.3s ease;
 }
 
 .statusLabel.active {
@@ -127,7 +134,11 @@
   justify-content: center;
   background: var(--primary-color);
   color: #fff;
-  transition: transform 0.15s ease, background-color 0.3s ease, box-shadow 0.3s ease, border-radius 0.3s ease;
+  transition:
+    transform 0.15s ease,
+    background-color 0.3s ease,
+    box-shadow 0.3s ease,
+    border-radius 0.3s ease;
   box-shadow: 0 4px 20px rgba(255, 146, 72, 0.35);
 }
 
@@ -196,7 +207,9 @@
   font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.15s ease, transform 0.1s ease;
+  transition:
+    background 0.15s ease,
+    transform 0.1s ease;
   -webkit-tap-highlight-color: transparent;
 }
 
