@@ -28,18 +28,11 @@ const nextConfig: NextConfig = {
   ],
   outputFileTracingExcludes: {
     "/api/*": [
-      // Native onnxruntime-node — postinstall patches onnx.js to use onnxruntime-web instead
       "./node_modules/onnxruntime-node",
       "./node_modules/@xenova/transformers/node_modules/onnxruntime-node",
       "./node_modules/@xenova/transformers/node_modules/sharp",
-      "./node_modules/nodejs-whisper",
-      // Webpack bundle not needed — @xenova/transformers runs from src/ as external
       "./node_modules/@xenova/transformers/dist",
-      // Threaded WASM variants not needed (numThreads=1 in transformers service)
-      "./node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm",
-      "./node_modules/onnxruntime-web/dist/ort-wasm-threaded.wasm",
-      "./node_modules/onnxruntime-web/dist/ort-wasm-threaded.js",
-      "./node_modules/onnxruntime-web/dist/ort-wasm-threaded.worker.js",
+      "./node_modules/nodejs-whisper",
     ],
   },
   // Empty turbopack config to silence Next.js 16 warning

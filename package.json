@@ -12,7 +12,7 @@
     "db:studio": "drizzle-kit studio",
     "watch:uploads": "FILE_WATCHER_ENABLED=true tsx scripts/watch-uploads.ts",
     "test": "jest",
-    "postinstall": "sed -i.bak \"s/from 'onnxruntime-node'/from 'onnxruntime-web'/g\" node_modules/@xenova/transformers/src/backends/onnx.js && rm -f node_modules/@xenova/transformers/src/backends/onnx.js.bak && sed -i.bak -e \"s/import sharp from 'sharp'/const sharp = null/g\" -e \"s/throw new Error('Unable to load image processing library.')/loadImageFunction = async () => { throw new Error('Image processing not available'); }/g\" node_modules/@xenova/transformers/src/utils/image.js && rm -f node_modules/@xenova/transformers/src/utils/image.js.bak",
+    "postinstall": "bash scripts/patch-transformers.sh",
     "ios": "cap open ios",
     "android": "cap open android"
   },
