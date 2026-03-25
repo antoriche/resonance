@@ -33,23 +33,39 @@ const nextConfig: NextConfig = {
   ],
   outputFileTracingIncludes: {
     "/api/*": [
-      // onnxruntime-node is aliased to onnxruntime-web via npm — file tracer
-      // doesn't follow the alias, so we force-include its dist files.
-      "./node_modules/onnxruntime-node/**",
+      // Only include the specific files needed at runtime from the aliased
+      // onnxruntime-node (→ onnxruntime-web). File tracer can't follow the alias.
+      "./node_modules/onnxruntime-node/package.json",
+      "./node_modules/onnxruntime-node/dist/ort-web.node.js",
+      // Single-threaded WASM variants only (numThreads=1 in transformers service).
+      // ort-wasm-simd.wasm is preferred; ort-wasm.wasm as fallback if SIMD unavailable.
+      "./node_modules/onnxruntime-node/dist/ort-wasm-simd.wasm",
+      "./node_modules/onnxruntime-node/dist/ort-wasm.wasm",
     ],
   },
   outputFileTracingExcludes: {
     "/api/*": [
-      // onnxruntime-node is now aliased to onnxruntime-web (pure JS/WASM),
-      // so it must NOT be excluded — it needs to deploy alongside @xenova/transformers.
-      // "./node_modules/onnxruntime-node",
+      // Nested native onnxruntime-node (92MB) — replaced by our onnxruntime-web alias
       "./node_modules/@xenova/transformers/node_modules/onnxruntime-node",
+      // sharp is not used for speech-to-text
       "./node_modules/@xenova/transformers/node_modules/sharp",
       "./node_modules/nodejs-whisper",
-      // Exclude non-essential dist files (source is used, not the webpack bundle)
+      // Webpack bundle not needed — @xenova/transformers runs from src/ as external
       "./node_modules/@xenova/transformers/dist",
-      // WASM binaries must stay in the bundle for serverless (no CDN fallback)
-      // "./node_modules/onnxruntime-web/dist/*.wasm",
+      // Duplicate onnxruntime-web dist — runtime uses onnxruntime-node (aliased) instead
+      "./node_modules/onnxruntime-web/dist",
+      // Threaded WASM variants not needed (numThreads=1)
+      "./node_modules/onnxruntime-node/dist/ort-wasm-simd-threaded.wasm",
+      "./node_modules/onnxruntime-node/dist/ort-wasm-threaded.wasm",
+      "./node_modules/onnxruntime-node/dist/ort-wasm-threaded.js",
+      "./node_modules/onnxruntime-node/dist/ort-wasm-threaded.worker.js",
+      // Source maps and browser bundles — not needed at runtime
+      "./node_modules/onnxruntime-node/dist/*.map",
+      "./node_modules/onnxruntime-node/dist/ort.js",
+      "./node_modules/onnxruntime-node/dist/ort-web.js",
+      "./node_modules/onnxruntime-node/dist/ort-web.node.js.map",
+      "./node_modules/onnxruntime-node/dist/*.min.js",
+      "./node_modules/onnxruntime-node/dist/*.min.js.map",
     ],
   },
   // Empty turbopack config to silence Next.js 16 warning
