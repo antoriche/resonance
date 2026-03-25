@@ -20,6 +20,10 @@ export interface ResonanceRecorderPlugin {
     eventName: "recordingTick",
     listenerFunc: (data: { elapsedSeconds: number; status: string }) => void,
   ): Promise<{ remove: () => Promise<void> }>;
+  addListener(
+    eventName: "recordingStateChange",
+    listenerFunc: (data: { status: string; elapsedSeconds: number }) => void,
+  ): Promise<{ remove: () => Promise<void> }>;
 }
 
 const ResonanceRecorder =

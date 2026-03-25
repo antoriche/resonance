@@ -15,8 +15,12 @@ final class AutoRecordMonitor {
     // MARK: - Activate / Deactivate
 
     func activate() {
-        guard !isActive else { return }
+        guard !isActive else {
+            print("[AutoRecordMonitor] already active")
+            return
+        }
         isActive = true
+        print("[AutoRecordMonitor] activated")
 
         UIDevice.current.isBatteryMonitoringEnabled = true
 
@@ -77,12 +81,17 @@ final class AutoRecordMonitor {
     // MARK: - Core Logic
 
     func evaluateConditions() {
-        guard isActive else { return }
+        guard isActive else {
+            print("[AutoRecordMonitor] evaluateConditions skipped — not active")
+            return
+        }
 
-        // Check isOtherAudioPlaying BEFORE we might activate our own audio session.
-        // Once our session is active with .playAndRecord, other audio may be interrupted.
+        let batteryState = UIDevice.current.batteryState
+        let charging = isCharging
         let isMusicPlaying = AVAudioSession.sharedInstance().isOtherAudioPlaying
-        let shouldRecord = isCharging && !isMusicPlaying
+        let shouldRecord = charging && !isMusicPlaying
+
+        print("[AutoRecordMonitor] batteryState=\(batteryState.rawValue) charging=\(charging) musicPlaying=\(isMusicPlaying) isRecording=\(engine.isRecording) suppressed=\(engine.isAutoStartSuppressed) → shouldRecord=\(shouldRecord)")
 
         if shouldRecord && !engine.isRecording && !engine.isAutoStartSuppressed {
             do {

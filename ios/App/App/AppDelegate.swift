@@ -19,6 +19,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             print("[AppDelegate] Audio session configuration failed: \(error)")
         }
 
+        // Auto-record is enabled by default
+        UserDefaults.standard.register(defaults: ["autoRecordEnabled": true])
+
         // Configure RecordingEngine default upload URL (plugin load() may override)
         RecordingEngine.shared.configure(uploadURL: "https://resonance-plum-five.vercel.app")
 

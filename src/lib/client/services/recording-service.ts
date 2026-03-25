@@ -49,6 +49,35 @@ class RecordingService {
   private mimeType = "";
   private tickListener: { remove: () => Promise<void> } | null = null;
 
+  constructor() {
+    // On iOS, listen for native state changes (auto-record start/stop)
+    // so the Zustand store stays in sync even when JS didn't initiate recording.
+    if (Capacitor.getPlatform() === "ios") {
+      ResonanceRecorder.addListener("recordingStateChange", (data) => {
+        const store = useRecordingStore.getState();
+        if (data.status === "recording" && store.status !== "recording") {
+          store.setStatus("recording");
+          store.resetTime();
+          this.ensureTickListener();
+        } else if (data.status === "idle" && store.status !== "idle") {
+          store.setStatus("idle");
+          store.setElapsedTime(data.elapsedSeconds);
+          this.removeTickListener();
+        }
+      });
+    }
+  }
+
+  private async ensureTickListener(): Promise<void> {
+    if (this.tickListener) return;
+    this.tickListener = await ResonanceRecorder.addListener(
+      "recordingTick",
+      (data) => {
+        useRecordingStore.getState().setElapsedTime(data.elapsedSeconds);
+      },
+    );
+  }
+
   // ── Store shorthand ────────────────────────────────────────────
 
   private get store() {

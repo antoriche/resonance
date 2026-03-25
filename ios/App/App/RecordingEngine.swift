@@ -50,6 +50,10 @@ final class RecordingEngine {
     /// The Capacitor plugin wires this to `notifyListeners`.
     var onTick: ((Int, String) -> Void)?
 
+    /// Callback fired when recording state changes (start/stop/pause/resume).
+    /// The plugin wires this to notify JS so the UI stays in sync.
+    var onStateChange: ((String, Int) -> Void)?
+
     var isRecording: Bool { audioRecorder != nil }
 
     var isAutoStartSuppressed: Bool {
@@ -127,6 +131,7 @@ final class RecordingEngine {
                 startLiveActivity(recordingId: recordingId)
             }
 
+            onStateChange?("recording", 0)
             return RecordingResult(recordingId: recordingId, status: "recording", elapsedSeconds: 0)
         } catch {
             throw RecordingError.failedToStart(error.localizedDescription)
@@ -136,7 +141,7 @@ final class RecordingEngine {
     // MARK: - Stop Recording
 
     @discardableResult
-    func stopRecording() throws -> RecordingResult {
+    func stopRecording(suppressAutoRestart: Bool = false) throws -> RecordingResult {
         guard let recorder = audioRecorder else {
             throw RecordingError.notRecording
         }
@@ -153,8 +158,8 @@ final class RecordingEngine {
         let recordingId = currentRecordingId ?? ""
         let elapsed = elapsedSeconds
 
-        // If this was an auto session being stopped (likely manually), suppress re-trigger
-        if source == .auto {
+        // Only suppress auto-restart when the user manually stops an auto session
+        if suppressAutoRestart {
             autoStartSuppressedUntil = Date().addingTimeInterval(60)
         }
 
@@ -163,6 +168,7 @@ final class RecordingEngine {
         isPaused = false
         source = .manual
 
+        onStateChange?("idle", elapsed)
         return RecordingResult(recordingId: recordingId, status: "idle", elapsedSeconds: elapsed)
     }
 
@@ -233,6 +239,24 @@ final class RecordingEngine {
 
             let status = self.isPaused ? "paused" : "recording"
             self.onTick?(self.elapsedSeconds, status)
+
+            // iOS kills Live Activities after ~8h. Re-create if dismissed while still recording.
+            self.restartLiveActivityIfNeeded()
+        }
+    }
+
+    private func restartLiveActivityIfNeeded() {
+        guard isRecording, let recordingId = currentRecordingId else { return }
+        if #available(iOS 16.2, *) {
+            guard let activity = currentActivity as? Activity<RecordingActivityAttributes> else {
+                // Activity was never created or got cleared — restart it
+                startLiveActivity(recordingId: recordingId)
+                return
+            }
+            if activity.activityState == .dismissed || activity.activityState == .ended {
+                currentActivity = nil
+                startLiveActivity(recordingId: recordingId)
+            }
         }
     }
 

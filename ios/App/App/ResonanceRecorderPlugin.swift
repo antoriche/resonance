@@ -33,6 +33,13 @@ public class ResonanceRecorderPlugin: CAPPlugin, CAPBridgedPlugin {
                 "status": status,
             ])
         }
+
+        engine.onStateChange = { [weak self] status, elapsed in
+            self?.notifyListeners("recordingStateChange", data: [
+                "status": status,
+                "elapsedSeconds": elapsed,
+            ])
+        }
     }
 
     // MARK: - Recording
@@ -48,7 +55,9 @@ public class ResonanceRecorderPlugin: CAPPlugin, CAPBridgedPlugin {
 
     @objc func stopRecording(_ call: CAPPluginCall) {
         do {
-            let result = try engine.stopRecording()
+            // User manually stopped — suppress auto-restart if it was an auto session
+            let suppress = engine.source == .auto
+            let result = try engine.stopRecording(suppressAutoRestart: suppress)
             call.resolve([
                 "recordingId": result.recordingId,
                 "status": result.status,
