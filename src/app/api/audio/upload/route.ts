@@ -20,7 +20,9 @@ import storage from "@/lib/server/services/storage";
 const logger = createLogger("audio/upload");
 
 // Allow maximum execution time for model download + transcription
-export const maxDuration = 10;
+// Background processing (diarization + Whisper) needs significant time,
+// especially on cold starts when models must be downloaded.
+export const maxDuration = 60;
 
 // ── Helpers ──────────────────────────────────────────────────────────
 

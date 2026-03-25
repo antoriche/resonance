@@ -25,7 +25,17 @@ const nextConfig: NextConfig = {
     "pg-embedded",
     "nodejs-whisper",
     "@ffmpeg-installer/ffmpeg",
+    "fluent-ffmpeg",
+    "onnxruntime-web",
+    "wavefile",
+    "music-metadata",
   ],
+  outputFileTracingIncludes: {
+    "/api/audio/upload": [
+      "./src/lib/server/services/speaker-diarization/segmentation.onnx",
+      "./src/lib/server/services/speaker-diarization/embedding.onnx",
+    ],
+  },
   outputFileTracingExcludes: {
     "/api/*": [
       "./node_modules/onnxruntime-node",
