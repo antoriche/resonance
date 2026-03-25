@@ -20,6 +20,10 @@ import {
   FFT_SIZE,
 } from "@/lib/shared/audio/constants";
 import { getMicStream, releaseMicStream } from "@/lib/client/audio/mic";
+import {
+  extractWebmInitSegment,
+  prependInitSegment,
+} from "@/lib/client/audio/webm-header";
 import { useRecordingStore } from "@/lib/client/stores/recording";
 import ResonanceRecorder from "@/lib/client/plugins/resonance-recorder";
 
@@ -48,6 +52,9 @@ class RecordingService {
   private timerInterval: ReturnType<typeof setInterval> | null = null;
   private mimeType = "";
   private tickListener: { remove: () => Promise<void> } | null = null;
+  /** WebM init segment (EBML+Tracks) captured from the first chunk */
+  private webmInitSegment: Uint8Array | null = null;
+  private isFirstChunk = true;
 
   constructor() {
     // On iOS, listen for native state changes (auto-record start/stop)
@@ -228,7 +235,7 @@ class RecordingService {
 
       this.mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
-          this.uploadChunk(event.data);
+          this.handleChunk(event.data);
           this.store.nextChunk();
         }
       };
@@ -288,6 +295,36 @@ class RecordingService {
       this.startTimer();
       this.store.setStatus("recording");
     }
+  }
+
+  // ── Chunk handling ─────────────────────────────────────────────
+
+  /**
+   * On the first chunk, extract the WebM init segment (EBML header +
+   * Segment info + Tracks). On subsequent chunks, prepend the init
+   * segment so each upload is a valid standalone WebM file that
+   * FFmpeg can parse independently.
+   */
+  private async handleChunk(blob: Blob): Promise<void> {
+    if (this.isFirstChunk) {
+      this.isFirstChunk = false;
+
+      // Only relevant for WebM — other containers don't have this issue
+      if (this.mimeType.includes("webm") || !this.mimeType) {
+        this.webmInitSegment = await extractWebmInitSegment(blob);
+      }
+
+      // First chunk is always valid as-is
+      return this.uploadChunk(blob);
+    }
+
+    // Subsequent WebM chunks need the init segment prepended
+    if (this.webmInitSegment) {
+      const completeBlob = prependInitSegment(this.webmInitSegment, blob);
+      return this.uploadChunk(completeBlob);
+    }
+
+    return this.uploadChunk(blob);
   }
 
   // ── Chunk upload ───────────────────────────────────────────────
@@ -356,6 +393,8 @@ class RecordingService {
 
     this.store.setAnalyserNode(null);
     this.mediaRecorder = null;
+    this.webmInitSegment = null;
+    this.isFirstChunk = true;
   }
 }
 
