@@ -33,20 +33,24 @@ const nextConfig: NextConfig = {
   ],
   outputFileTracingIncludes: {
     "/api/*": [
-      // Only include the specific files needed at runtime from the aliased
-      // onnxruntime-node (→ onnxruntime-web). File tracer can't follow the alias.
+      // onnxruntime-node is aliased to onnxruntime-web via npm — file tracer
+      // doesn't follow the alias, so we force-include its dist files.
       "./node_modules/onnxruntime-node/package.json",
       "./node_modules/onnxruntime-node/dist/ort-web.node.js",
       // Single-threaded WASM variants only (numThreads=1 in transformers service).
       // ort-wasm-simd.wasm is preferred; ort-wasm.wasm as fallback if SIMD unavailable.
       "./node_modules/onnxruntime-node/dist/ort-wasm-simd.wasm",
       "./node_modules/onnxruntime-node/dist/ort-wasm.wasm",
+      // Nested copy is symlinked to top-level via postinstall, but Vercel may
+      // not follow symlinks — include these paths explicitly too.
+      "./node_modules/@xenova/transformers/node_modules/onnxruntime-node/package.json",
+      "./node_modules/@xenova/transformers/node_modules/onnxruntime-node/dist/ort-web.node.js",
+      "./node_modules/@xenova/transformers/node_modules/onnxruntime-node/dist/ort-wasm-simd.wasm",
+      "./node_modules/@xenova/transformers/node_modules/onnxruntime-node/dist/ort-wasm.wasm",
     ],
   },
   outputFileTracingExcludes: {
     "/api/*": [
-      // Nested native onnxruntime-node (92MB) — replaced by our onnxruntime-web alias
-      "./node_modules/@xenova/transformers/node_modules/onnxruntime-node",
       // sharp is not used for speech-to-text
       "./node_modules/@xenova/transformers/node_modules/sharp",
       "./node_modules/nodejs-whisper",
