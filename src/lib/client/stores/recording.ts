@@ -24,6 +24,8 @@ export interface RecordingActions {
   setStatus: (status: RecordingStatus) => void;
   /** Increment elapsed time by 1 second */
   tick: () => void;
+  /** Set elapsed time to an exact value (used by native plugin sync) */
+  setElapsedTime: (seconds: number) => void;
   /** Reset elapsed time to 0 */
   resetTime: () => void;
   /** Increment the chunk index */
@@ -54,6 +56,7 @@ export const useRecordingStore = create<RecordingState & RecordingActions>()(
 
     setStatus: (status) => set({ status, error: null }),
     tick: () => set((s) => ({ elapsedTime: s.elapsedTime + 1 })),
+    setElapsedTime: (seconds) => set({ elapsedTime: seconds }),
     resetTime: () => set({ elapsedTime: 0 }),
     nextChunk: () => set((s) => ({ chunkIndex: s.chunkIndex + 1 })),
     setError: (error) => set({ error }),

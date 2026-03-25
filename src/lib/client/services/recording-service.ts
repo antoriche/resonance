@@ -1,13 +1,17 @@
 // ── Client-side Recording Service ────────────────────────────────────
 //
-// Singleton that manages the full recording lifecycle:
-//   mic access → MediaRecorder → chunk slicing → upload
+// Singleton that manages the full recording lifecycle.
+//
+// On iOS native: delegates to the ResonanceRecorder Capacitor plugin
+//   (AVAudioRecorder + Live Activity / Dynamic Island).
+// On web: uses MediaRecorder + getUserMedia (original path).
 //
 // Lives outside React; pushes state into the Zustand store so any
 // component can subscribe.
 // ─────────────────────────────────────────────────────────────────────
 
 import axios from "axios";
+import { Capacitor } from "@capacitor/core";
 
 import {
   CHUNK_DURATION_MS,
@@ -17,6 +21,7 @@ import {
 } from "@/lib/shared/audio/constants";
 import { getMicStream, releaseMicStream } from "@/lib/client/audio/mic";
 import { useRecordingStore } from "@/lib/client/stores/recording";
+import ResonanceRecorder from "@/lib/client/plugins/resonance-recorder";
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -42,11 +47,16 @@ class RecordingService {
   private audioContext: AudioContext | null = null;
   private timerInterval: ReturnType<typeof setInterval> | null = null;
   private mimeType = "";
+  private tickListener: { remove: () => Promise<void> } | null = null;
 
   // ── Store shorthand ────────────────────────────────────────────
 
   private get store() {
     return useRecordingStore.getState();
+  }
+
+  private get isNativeIOS(): boolean {
+    return Capacitor.getPlatform() === "ios";
   }
 
   // ── Public API ─────────────────────────────────────────────────
@@ -55,6 +65,117 @@ class RecordingService {
     const { status } = this.store;
     if (status === "recording") return;
 
+    if (this.isNativeIOS) {
+      return this.startNative();
+    }
+    return this.startWeb();
+  }
+
+  stop(): void {
+    if (this.isNativeIOS) {
+      this.stopNative();
+    } else {
+      this.stopWeb();
+    }
+  }
+
+  pause(): void {
+    if (this.isNativeIOS) {
+      this.pauseNative();
+    } else {
+      this.pauseWeb();
+    }
+  }
+
+  resume(): void {
+    if (this.isNativeIOS) {
+      this.resumeNative();
+    } else {
+      this.resumeWeb();
+    }
+  }
+
+  /** Toggle between start/stop */
+  toggle(): void {
+    const { status } = this.store;
+    if (status === "idle") {
+      this.start();
+    } else {
+      this.stop();
+    }
+  }
+
+  // ── Native iOS (AVAudioRecorder + Live Activity) ───────────────
+
+  private async startNative(): Promise<void> {
+    try {
+      this.tickListener = await ResonanceRecorder.addListener(
+        "recordingTick",
+        (data) => {
+          useRecordingStore.getState().setElapsedTime(data.elapsedSeconds);
+        },
+      );
+
+      await ResonanceRecorder.startRecording();
+      this.store.setStatus("recording");
+      this.store.resetTime();
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to start recording.";
+      this.store.setError(message);
+    }
+  }
+
+  private stopNative(): void {
+    ResonanceRecorder.stopRecording()
+      .then(() => {
+        this.removeTickListener();
+        this.store.setStatus("idle");
+      })
+      .catch((err) => {
+        console.error(
+          "[recording-service] Failed to stop native recording:",
+          err,
+        );
+      });
+  }
+
+  private pauseNative(): void {
+    ResonanceRecorder.pauseRecording()
+      .then(() => {
+        this.store.setStatus("paused");
+      })
+      .catch((err) => {
+        console.error(
+          "[recording-service] Failed to pause native recording:",
+          err,
+        );
+      });
+  }
+
+  private resumeNative(): void {
+    ResonanceRecorder.resumeRecording()
+      .then(() => {
+        this.store.setStatus("recording");
+      })
+      .catch((err) => {
+        console.error(
+          "[recording-service] Failed to resume native recording:",
+          err,
+        );
+      });
+  }
+
+  private removeTickListener(): void {
+    if (this.tickListener) {
+      this.tickListener.remove();
+      this.tickListener = null;
+    }
+  }
+
+  // ── Web (MediaRecorder) ────────────────────────────────────────
+
+  private async startWeb(): Promise<void> {
     try {
       // 1. Acquire microphone
       this.stream = await getMicStream();
@@ -95,7 +216,7 @@ class RecordingService {
       };
 
       this.mediaRecorder.onstop = () => {
-        // Final cleanup is handled in stop()
+        // Final cleanup is handled in stopWeb()
       };
 
       // 5. Start recording with timeslice → fires ondataavailable every CHUNK_DURATION_MS
@@ -115,7 +236,7 @@ class RecordingService {
     }
   }
 
-  stop(): void {
+  private stopWeb(): void {
     if (!this.mediaRecorder) return;
 
     // requestData() flushes the final partial chunk before stopping
@@ -130,7 +251,7 @@ class RecordingService {
     this.store.setStatus("idle");
   }
 
-  pause(): void {
+  private pauseWeb(): void {
     if (this.mediaRecorder?.state === "recording") {
       this.mediaRecorder.pause();
       this.stopTimer();
@@ -138,21 +259,11 @@ class RecordingService {
     }
   }
 
-  resume(): void {
+  private resumeWeb(): void {
     if (this.mediaRecorder?.state === "paused") {
       this.mediaRecorder.resume();
       this.startTimer();
       this.store.setStatus("recording");
-    }
-  }
-
-  /** Toggle between start/stop */
-  toggle(): void {
-    const { status } = this.store;
-    if (status === "idle") {
-      this.start();
-    } else {
-      this.stop();
     }
   }
 
