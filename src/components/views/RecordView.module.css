@@ -6,159 +6,202 @@
   align-items: center;
   justify-content: center;
   flex: 1;
-  gap: 2rem;
+  gap: 2.5rem;
   padding: 2rem;
   user-select: none;
 }
 
-/* ── Record button ────────────────────────────────────────────────── */
+/* ── Status area ─────────────────────────────────────────────────── */
+
+.statusArea {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(128, 128, 128, 0.3);
+  transition: background 0.3s ease;
+}
+
+.statusDotRecording {
+  background: #e53935;
+  animation: blink 1.2s ease-in-out infinite;
+}
+
+.statusDotPaused {
+  background: var(--primary-color);
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.statusLabel {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-color);
+  opacity: 0.35;
+  transition: opacity 0.3s ease, color 0.3s ease;
+}
+
+.statusLabel.active {
+  opacity: 0.9;
+  color: #e53935;
+}
+
+/* ── Record area (button + waveform ring) ────────────────────────── */
+
+.recordArea {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 240px;
+  height: 240px;
+}
+
+/* ── Waveform ring ───────────────────────────────────────────────── */
+
+.waveformRing {
+  position: absolute;
+  inset: 0;
+  opacity: 0.25;
+  transition: opacity 0.4s ease;
+}
+
+.waveformRingActive {
+  opacity: 1;
+}
+
+.waveformSvg {
+  width: 100%;
+  height: 100%;
+}
+
+.waveformLine {
+  stroke: var(--primary-color);
+  opacity: 0.3;
+  transition: opacity 0.1s ease;
+}
+
+.waveformLineRecording {
+  stroke: #e53935;
+  opacity: 0.7;
+}
+
+/* ── Record button ───────────────────────────────────────────────── */
 
 .recordButton {
   position: relative;
-  width: 140px;
-  height: 140px;
+  width: 96px;
+  height: 96px;
   border-radius: 50%;
   border: none;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--primary-color);
-  color: #fff;
-  transition:
-    transform 0.15s ease,
-    background-color 0.3s ease,
-    box-shadow 0.3s ease;
-  box-shadow: 0 4px 24px rgba(255, 146, 72, 0.3);
+  background: transparent;
   z-index: 1;
   -webkit-tap-highlight-color: transparent;
+  padding: 0;
 }
 
-.recordButton:hover {
-  transform: scale(1.04);
+.recordButton:active .buttonInner {
+  transform: scale(0.92);
 }
 
-.recordButton:active {
-  transform: scale(0.96);
+.buttonInner {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-color);
+  color: #fff;
+  transition: transform 0.15s ease, background-color 0.3s ease, box-shadow 0.3s ease, border-radius 0.3s ease;
+  box-shadow: 0 4px 20px rgba(255, 146, 72, 0.35);
 }
 
-.recordButton.recording {
+.recording .buttonInner {
   background: #e53935;
-  box-shadow: 0 4px 32px rgba(229, 57, 53, 0.45);
+  box-shadow: 0 4px 28px rgba(229, 57, 53, 0.45);
 }
 
-.recordButton.paused {
+.paused .buttonInner {
   background: var(--secondary-color);
-  box-shadow: 0 4px 24px rgba(255, 179, 128, 0.35);
+  box-shadow: 0 4px 20px rgba(255, 179, 128, 0.35);
 }
 
-/* ── Pulse ring (visible when recording) ──────────────────────────── */
+/* ── Pulse ring ──────────────────────────────────────────────────── */
 
 .pulseRing {
   position: absolute;
-  inset: -12px;
+  inset: 0;
   border-radius: 50%;
-  border: 3px solid #e53935;
+  border: 2px solid #e53935;
   opacity: 0;
   pointer-events: none;
 }
 
 .recording .pulseRing {
-  animation: pulse 1.8s ease-out infinite;
+  animation: pulse 2s ease-out infinite;
 }
 
 @keyframes pulse {
   0% {
-    transform: scale(1);
-    opacity: 0.6;
+    transform: scale(0.85);
+    opacity: 0.5;
   }
   100% {
-    transform: scale(1.35);
+    transform: scale(1.5);
     opacity: 0;
   }
 }
 
-/* ── Button icon ──────────────────────────────────────────────────── */
+/* ── Button icons ────────────────────────────────────────────────── */
 
-.buttonIcon {
-  width: 40px;
-  height: 40px;
-  transition: border-radius 0.2s ease;
-}
-
-.recordDot {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: #fff;
-}
-
-.stopSquare {
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
-  background: #fff;
-}
-
-/* ── Timer ────────────────────────────────────────────────────────── */
-
-.timer {
-  font-size: 2.5rem;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.04em;
-  color: var(--text-color);
-  opacity: 0.85;
-  min-height: 3rem;
-}
-
-.timerIdle {
-  opacity: 0.3;
-}
-
-/* ── Status label ─────────────────────────────────────────────────── */
-
-.statusLabel {
-  font-size: 0.9rem;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  opacity: 0.5;
-}
-
-.statusLabel.active {
-  opacity: 0.8;
-  color: #e53935;
-}
-
-/* ── Waveform ─────────────────────────────────────────────────────── */
-
-.waveformContainer {
+.micIcon {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  height: 80px;
-  width: 100%;
-  max-width: 400px;
-  overflow: hidden;
 }
 
-.waveformBar {
-  flex-shrink: 0;
-  width: 3px;
-  border-radius: 2px;
-  background: var(--primary-color);
-  transition: height 0.06s ease;
-  min-height: 3px;
+.stopIcon {
+  width: 24px;
+  height: 24px;
+  border-radius: 5px;
+  background: #fff;
 }
 
-.waveformBar.recording {
-  background: #e53935;
+/* ── Secondary button ────────────────────────────────────────────── */
+
+.secondaryButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.5rem;
+  border: 1px solid rgba(128, 128, 128, 0.15);
+  border-radius: 100px;
+  background: var(--background-secondary);
+  color: var(--text-color);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.waveformIdle {
-  opacity: 0.2;
+.secondaryButton:active {
+  transform: scale(0.96);
 }
 
 /* ── Error ────────────────────────────────────────────────────────── */
@@ -168,45 +211,7 @@
   font-size: 0.85rem;
   text-align: center;
   max-width: 300px;
-}
-
-/* ── Pause / Resume row ───────────────────────────────────────────── */
-
-.secondaryControls {
-  display: flex;
-  gap: 1rem;
-}
-
-.secondaryButton {
-  padding: 0.5rem 1.25rem;
-  border: none;
-  border-radius: 20px;
-  background: var(--background-secondary);
-  color: var(--text-color);
-  font-size: 0.85rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.15s ease;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
-}
-
-.secondaryButton:hover {
-  background: var(--secondary-color);
-}
-
-/* ── Responsive ───────────────────────────────────────────────────── */
-
-@media (max-width: 768px) {
-  .recordButton {
-    width: 120px;
-    height: 120px;
-  }
-
-  .timer {
-    font-size: 2rem;
-  }
-
-  .waveformContainer {
-    max-width: 90vw;
-  }
+  padding: 0.75rem 1rem;
+  background: rgba(229, 57, 53, 0.08);
+  border-radius: 12px;
 }
