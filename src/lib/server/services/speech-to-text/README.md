@@ -16,9 +16,9 @@ Set the `SPEECH_TO_TEXT_ENGINE` environment variable in `.env`:
 
 When using `API_WHISPER`, set the following in `.env`:
 
-| Variable         | Required | Default     | Description                                                        |
-| ---------------- | -------- | ----------- | ------------------------------------------------------------------ |
-| `OPENAI_API_KEY` | Yes      | —           | Your OpenAI API key                                                |
+| Variable         | Required | Default     | Description                                                         |
+| ---------------- | -------- | ----------- | ------------------------------------------------------------------- |
+| `OPENAI_API_KEY` | Yes      | —           | Your OpenAI API key                                                 |
 | `WHISPER_MODEL`  | No       | `whisper-1` | Model name (shared with `LOCAL_WHISPER`, see Model Selection below) |
 
 ### Model Selection (LOCAL_WHISPER)
