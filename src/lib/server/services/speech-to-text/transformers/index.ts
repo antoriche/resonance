@@ -15,13 +15,6 @@ async function loadPipeline(
   // Vercel serverless, which breaks the threaded WASM backend.
   const onnxEnv = (env.backends as any).onnx;
   onnxEnv.wasm.numThreads = 1;
-  // Point WASM path to the bundled onnxruntime-web dist directory
-  onnxEnv.wasm.wasmPaths = require("path").join(
-    require.resolve("onnxruntime-web"),
-    "..",
-    "dist",
-    "",
-  );
   // Allow remote model downloads from Hugging Face Hub
   env.allowRemoteModels = true;
   // Cache models to /tmp (Vercel writable directory)
