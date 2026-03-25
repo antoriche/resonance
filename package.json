@@ -38,7 +38,6 @@
     "lodash": "^4.17.23",
     "music-metadata": "^11.12.1",
     "next": "16.1.6",
-    "nodejs-whisper": "^0.2.9",
     "onnxruntime-web": "^1.14.0",
     "pg": "^8.20.0",
     "pino": "^10.3.1",

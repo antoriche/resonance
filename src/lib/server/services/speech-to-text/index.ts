@@ -7,8 +7,14 @@ export async function speachToText(
   filePath: string,
   options: { offset: number; duration: number },
 ): Promise<{ text: string }> {
-  if (process.env.DISABLE_SPEECH_TO_TEXT === "true") {
-    return mockSpeachToText(filePath, options);
+  switch (process.env.SPEECH_TO_TEXT_ENGINE) {
+    case "MOCK":
+      return mockSpeachToText(filePath, options);
+    case "LOCAL_WHISPER":
+      return transformersSpeachToText(filePath, options);
+    default:
+      throw new Error(
+        `Invalid SPEECH_TO_TEXT_ENGINE: "${process.env.SPEECH_TO_TEXT_ENGINE}". Must be "MOCK" or "LOCAL_WHISPER".`,
+      );
   }
-  return transformersSpeachToText(filePath, options);
 }

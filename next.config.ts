@@ -23,7 +23,6 @@ const nextConfig: NextConfig = {
   },
   serverExternalPackages: [
     "pg-embedded",
-    "nodejs-whisper",
     "@ffmpeg-installer/ffmpeg",
     "fluent-ffmpeg",
     "onnxruntime-web",
@@ -41,7 +40,6 @@ const nextConfig: NextConfig = {
       "./node_modules/onnxruntime-node",
       "./node_modules/@xenova/transformers/node_modules/onnxruntime-node",
       "./node_modules/@xenova/transformers/node_modules/sharp",
-      "./node_modules/nodejs-whisper",
     ],
   },
   // Empty turbopack config to silence Next.js 16 warning
