@@ -33,7 +33,9 @@ const nextConfig: NextConfig = {
   ],
   outputFileTracingExcludes: {
     "/api/*": [
-      "./node_modules/onnxruntime-node",
+      // onnxruntime-node is now aliased to onnxruntime-web (pure JS/WASM),
+      // so it must NOT be excluded — it needs to deploy alongside @xenova/transformers.
+      // "./node_modules/onnxruntime-node",
       "./node_modules/@xenova/transformers/node_modules/onnxruntime-node",
       "./node_modules/@xenova/transformers/node_modules/sharp",
       "./node_modules/nodejs-whisper",
