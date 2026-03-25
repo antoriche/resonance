@@ -3,6 +3,8 @@ import { WaveFile } from "wavefile";
 import { readFileSync } from "fs";
 import { createLogger } from "@/lib/server/logger";
 
+const logger = createLogger("transformers-service");
+
 // Lazily load @xenova/transformers to avoid loading the native onnxruntime
 // binary at module evaluation time (which fails on Vercel serverless).
 async function loadPipeline(
@@ -11,13 +13,33 @@ async function loadPipeline(
   const { pipeline, env } = await import("@xenova/transformers");
   // Force single-threaded WASM — SharedArrayBuffer is not available in
   // Vercel serverless, which breaks the threaded WASM backend.
-  (env.backends as any).onnx.wasm.numThreads = 1;
-  return (await pipeline(...args)) as AutomaticSpeechRecognitionPipeline;
+  const onnxEnv = (env.backends as any).onnx;
+  onnxEnv.wasm.numThreads = 1;
+  // Point WASM path to the bundled onnxruntime-web dist directory
+  onnxEnv.wasm.wasmPaths = require("path").join(
+    require.resolve("onnxruntime-web"),
+    "..",
+    "dist",
+    "",
+  );
+  // Allow remote model downloads from Hugging Face Hub
+  env.allowRemoteModels = true;
+  // Cache models to /tmp (Vercel writable directory)
+  env.cacheDir = "/tmp/transformers-cache";
+
+  logger.info(
+    `Loading pipeline: wasmPaths=${onnxEnv.wasm.wasmPaths}, numThreads=${onnxEnv.wasm.numThreads}, cacheDir=${env.cacheDir}`,
+  );
+
+  try {
+    return (await pipeline(...args)) as AutomaticSpeechRecognitionPipeline;
+  } catch (error) {
+    logger.error({ error }, "Pipeline loading failed");
+    throw error;
+  }
 }
 
 // ── Transformers Service ────────────────────────────────────────────
-
-const logger = createLogger("transformers-service");
 
 export interface TranscriptionOptions {
   language?: string;

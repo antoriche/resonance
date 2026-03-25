@@ -19,6 +19,9 @@ import storage from "@/lib/server/services/storage";
 
 const logger = createLogger("audio/upload");
 
+// Allow maximum execution time for model download + transcription
+export const maxDuration = 10;
+
 // ── Helpers ──────────────────────────────────────────────────────────
 
 function extensionForMime(mime: string): string | null {
