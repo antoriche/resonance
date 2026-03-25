@@ -11,7 +11,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Configure audio session for background recording
         do {
             let audioSession = AVAudioSession.sharedInstance()
-            try audioSession.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth])
+            try audioSession.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetoothHFP])
         } catch {
             print("[AppDelegate] Audio session configuration failed: \(error)")
         }

@@ -108,6 +108,10 @@ class RecordingService {
   // ── Native iOS (AVAudioRecorder + Live Activity) ───────────────
 
   private async startNative(): Promise<void> {
+    // Update UI immediately for responsiveness
+    this.store.setStatus("recording");
+    this.store.resetTime();
+
     try {
       this.tickListener = await ResonanceRecorder.addListener(
         "recordingTick",
@@ -117,53 +121,43 @@ class RecordingService {
       );
 
       await ResonanceRecorder.startRecording();
-      this.store.setStatus("recording");
-      this.store.resetTime();
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to start recording.";
       this.store.setError(message);
+      this.store.setStatus("idle");
     }
   }
 
   private stopNative(): void {
-    ResonanceRecorder.stopRecording()
-      .then(() => {
-        this.removeTickListener();
-        this.store.setStatus("idle");
-      })
-      .catch((err) => {
-        console.error(
-          "[recording-service] Failed to stop native recording:",
-          err,
-        );
-      });
+    this.store.setStatus("idle");
+    this.removeTickListener();
+    ResonanceRecorder.stopRecording().catch((err) => {
+      console.error(
+        "[recording-service] Failed to stop native recording:",
+        err,
+      );
+    });
   }
 
   private pauseNative(): void {
-    ResonanceRecorder.pauseRecording()
-      .then(() => {
-        this.store.setStatus("paused");
-      })
-      .catch((err) => {
-        console.error(
-          "[recording-service] Failed to pause native recording:",
-          err,
-        );
-      });
+    this.store.setStatus("paused");
+    ResonanceRecorder.pauseRecording().catch((err) => {
+      console.error(
+        "[recording-service] Failed to pause native recording:",
+        err,
+      );
+    });
   }
 
   private resumeNative(): void {
-    ResonanceRecorder.resumeRecording()
-      .then(() => {
-        this.store.setStatus("recording");
-      })
-      .catch((err) => {
-        console.error(
-          "[recording-service] Failed to resume native recording:",
-          err,
-        );
-      });
+    this.store.setStatus("recording");
+    ResonanceRecorder.resumeRecording().catch((err) => {
+      console.error(
+        "[recording-service] Failed to resume native recording:",
+        err,
+      );
+    });
   }
 
   private removeTickListener(): void {

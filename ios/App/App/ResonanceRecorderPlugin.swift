@@ -56,7 +56,7 @@ public class ResonanceRecorderPlugin: CAPPlugin, CAPBridgedPlugin {
 
         do {
             let session = AVAudioSession.sharedInstance()
-            try session.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth])
+            try session.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetoothHFP])
             try session.setActive(true)
 
             let recordingId = UUID().uuidString
@@ -80,7 +80,7 @@ public class ResonanceRecorderPlugin: CAPPlugin, CAPBridgedPlugin {
             startElapsedTimer()
             startChunkTimer()
 
-            if #available(iOS 16.1, *) {
+            if #available(iOS 16.2, *) {
                 startLiveActivity(recordingId: recordingId)
             }
 
@@ -170,10 +170,6 @@ public class ResonanceRecorderPlugin: CAPPlugin, CAPBridgedPlugin {
             guard let self = self else { return }
             self.elapsedSeconds += 1
 
-            if #available(iOS 16.1, *) {
-                self.updateLiveActivity(status: "recording")
-            }
-
             self.notifyListeners("recordingTick", data: [
                 "elapsedSeconds": self.elapsedSeconds,
                 "status": self.isPaused ? "paused" : "recording",
@@ -183,7 +179,7 @@ public class ResonanceRecorderPlugin: CAPPlugin, CAPBridgedPlugin {
 
     // MARK: - Live Activity
 
-    @available(iOS 16.1, *)
+    @available(iOS 16.2, *)
     private func startLiveActivity(recordingId: String) {
         let attributes = RecordingActivityAttributes(recordingId: recordingId)
         let initialState = RecordingActivityAttributes.ContentState(
@@ -206,7 +202,7 @@ public class ResonanceRecorderPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     private func updateLiveActivity(status: String) {
-        if #available(iOS 16.1, *) {
+        if #available(iOS 16.2, *) {
             guard let activity = currentActivity as? Activity<RecordingActivityAttributes> else { return }
 
             let updatedState = RecordingActivityAttributes.ContentState(
@@ -223,7 +219,7 @@ public class ResonanceRecorderPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     private func endLiveActivity() {
-        if #available(iOS 16.1, *) {
+        if #available(iOS 16.2, *) {
             guard let activity = currentActivity as? Activity<RecordingActivityAttributes> else { return }
 
             let finalState = RecordingActivityAttributes.ContentState(

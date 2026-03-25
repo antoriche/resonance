@@ -2,11 +2,9 @@
 
 import {
   useRecordingStatus,
-  useRecordingElapsedTime,
   useRecordingError,
   useRecordingControls,
   useWaveformData,
-  formatElapsedTime,
 } from "@/hooks/recording";
 
 import viewStyles from "./views.module.css";
@@ -17,7 +15,6 @@ const WAVEFORM_BARS = 64;
 
 export default function RecordView() {
   const status = useRecordingStatus();
-  const elapsed = useRecordingElapsedTime();
   const error = useRecordingError();
   const { toggle, pause, resume } = useRecordingControls();
   const waveform = useWaveformData();
@@ -35,11 +32,6 @@ export default function RecordView() {
         >
           {isRecording ? "Recording" : isPaused ? "Paused" : "Tap to record"}
         </span>
-
-        {/* Timer */}
-        <div className={`${styles.timer} ${!isActive ? styles.timerIdle : ""}`}>
-          {formatElapsedTime(elapsed)}
-        </div>
 
         {/* Waveform visualizer */}
         <Waveform data={waveform} isRecording={isRecording} />
