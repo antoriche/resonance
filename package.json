@@ -12,7 +12,7 @@
     "db:studio": "drizzle-kit studio",
     "watch:uploads": "FILE_WATCHER_ENABLED=true tsx scripts/watch-uploads.ts",
     "test": "jest",
-    "postinstall": "rm -rf node_modules/@xenova/transformers/node_modules/onnxruntime-node && ln -sf ../../../onnxruntime-node node_modules/@xenova/transformers/node_modules/onnxruntime-node",
+    "postinstall": "sed -i.bak \"s/from 'onnxruntime-node'/from 'onnxruntime-web'/g\" node_modules/@xenova/transformers/src/backends/onnx.js && rm -f node_modules/@xenova/transformers/src/backends/onnx.js.bak",
     "ios": "cap open ios",
     "android": "cap open android"
   },
@@ -42,8 +42,7 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "wavefile": "^11.0.0",
-    "zustand": "^5.0.12",
-    "onnxruntime-node": "npm:onnxruntime-web@1.14.0"
+    "zustand": "^5.0.12"
   },
   "devDependencies": {
     "@capacitor/cli": "^8.2.0",
@@ -68,8 +67,5 @@
     "ts-jest": "^29.4.6",
     "tsx": "^4.21.0",
     "typescript": "^5"
-  },
-  "overrides": {
-    "onnxruntime-node": "$onnxruntime-node"
   }
 }
